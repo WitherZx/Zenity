@@ -2,6 +2,53 @@
   "expo": {
     "name": "Zenity",
     "slug": "Zenity",
-    "version": "1.0.0"
+    "scheme": "zenity",
+    "main": "./src/index.js",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/logo2.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/logo2.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0CC0DF"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.zenity.app",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "audio"
+        ]
+      }
+    },
+    "android": {
+      "package": "com.zenity.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/logo2.png",
+        "backgroundColor": "#0CC0DF"
+      },
+      "permissions": [
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/images/logo2.png"
+    },
+    "plugins": [
+      [
+        "expo-av",
+        {
+          "microphonePermission": false
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "be4c53e1-c566-44ad-8f0f-4588cec5609e"
+      }
+    },
+    "jsEngine": "jsc"
   }
 }

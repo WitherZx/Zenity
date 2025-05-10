@@ -1,0 +1,67 @@
+export const modules = [
+    {
+        id: "1",
+        name: "Meditações para Relaxamento e Sono",
+        thumbnail: require("../../assets/images/MPRES.jpg"),
+        image1x1: require("../../assets/images/MPRES.jpg"),
+        contents: [
+            { id: "1_1", name: "Sono profundo", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MPRES.jpg"), image3x4: require("../../assets/images/MPRES.jpg") },
+            { id: "1_2", name: "Relaxamento guiado", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MPRES.jpg"), image3x4: require("../../assets/images/MPRES.jpg") },
+            { id: "1_3", name: "Respiração para dormir", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MPRES.jpg"), image3x4: require("../../assets/images/MPRES.jpg") },
+            { id: "1_4", name: "Desacelerando a mente", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MPRES.jpg"), image3x4: require("../../assets/images/MPRES.jpg") },
+            { id: "1_5", name: "Sons da chuva", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MPRES.jpg"), image3x4: require("../../assets/images/MPRES.jpg") },
+        ],
+    },
+    {
+        id: "2",
+        name: "Meditações para Bem-Estar Emocional",
+        thumbnail: require("../../assets/images/MPBEE.jpg"),
+        image1x1: require("../../assets/images/MPBEE.jpg"),
+        contents: [
+            { id: "2_1", name: "Alívio da ansiedade", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MPBEE.jpg"), image3x4: require("../../assets/images/MPBEE.jpg") },
+            { id: "2_2", name: "Redução do estresse", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MPBEE.jpg"), image3x4: require("../../assets/images/MPBEE.jpg") },
+            { id: "2_3", name: "Construção da autoestima", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MPBEE.jpg"), image3x4: require("../../assets/images/MPBEE.jpg") },
+            { id: "2_4", name: "Equilíbrio emocional", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MPBEE.jpg"), image3x4: require("../../assets/images/MPBEE.jpg") },
+            { id: "2_5", name: "Meditação para dias difíceis", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MPBEE.jpg"), image3x4: require("../../assets/images/MPBEE.jpg") },
+        ],
+    },
+    {
+        id: "3",
+        name: "Meditações para Foco e Produtividade",
+        thumbnail: require("../../assets/images/MPFEP.jpg"),
+        image1x1: require("../../assets/images/MPFEP.jpg"),
+        contents: [
+            { id: "3_1", name: "Concentração plena", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MPFEP.jpg"), image3x4: require("../../assets/images/MPFEP.jpg") },
+            { id: "3_2", name: "Motivação e disciplina", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MPFEP.jpg"), image3x4: require("../../assets/images/MPFEP.jpg") },
+            { id: "3_3", name: "Clareza mental para decisões", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MPFEP.jpg"), image3x4: require("../../assets/images/MPFEP.jpg") },
+            { id: "3_4", name: "Criatividade e insights", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MPFEP.jpg"), image3x4: require("../../assets/images/MPFEP.jpg") },
+            { id: "3_5", name: "Preparação para tarefas importantes", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MPFEP.jpg"), image3x4: require("../../assets/images/MPFEP.jpg") },
+        ],
+    },
+    {
+        id: "4",
+        name: "Meditações Religiosas e Espirituais",
+        thumbnail: require("../../assets/images/MREE.jpg"),
+        image1x1: require("../../assets/images/MREE.jpg"),
+        contents: [
+            { id: "4_1", name: "Meditações espíritas", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MREE.jpg"), image3x4: require("../../assets/images/MREE.jpg") },
+            { id: "4_2", name: "Meditações católicas", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MREE.jpg"), image3x4: require("../../assets/images/MREE.jpg") },
+            { id: "4_3", name: "Meditações cristã", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MREE.jpg"), image3x4: require("../../assets/images/MREE.jpg") },
+            { id: "4_4", name: "Conexão com o divino", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MREE.jpg"), image3x4: require("../../assets/images/MREE.jpg") },
+            { id: "4_5", name: "Reflexão e gratidão espiritual", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MREE.jpg"), image3x4: require("../../assets/images/MREE.jpg") },
+        ],
+    },
+    {
+        id: "5",
+        name: "Meditações para o Dia a Dia",
+        thumbnail: require("../../assets/images/MPODAD.jpg"),
+        image1x1: require("../../assets/images/MPODAD.jpg"),
+        contents: [
+            { id: "5_1", name: "Meditação matinal para energia", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MPODAD.jpg"), image3x4: require("../../assets/images/MPODAD.jpg") },
+            { id: "5_2", name: "Gratidão diária", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MPODAD.jpg"), image3x4: require("../../assets/images/MPODAD.jpg") },
+            { id: "5_3", name: "Paz interior no meio do caos", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MPODAD.jpg"), image3x4: require("../../assets/images/MPODAD.jpg") },
+            { id: "5_4", name: "Pausa para respirar e relaxar", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MPODAD.jpg"), image3x4: require("../../assets/images/MPODAD.jpg") },
+            { id: "5_5", name: "Desacelerando no fim do dia", file: require("../../assets/audios/sample.mp3"), duration: 29, thumbnail: require("../../assets/images/MPODAD.jpg"), image3x4: require("../../assets/images/MPODAD.jpg") },
+        ],
+    },
+];
