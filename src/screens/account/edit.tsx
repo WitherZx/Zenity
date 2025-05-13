@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AccountStackParamList } from '../../stacks/accountStack';
 import { useAuth } from '../../contexts/AuthContext';
@@ -8,8 +8,11 @@ import PageModel2 from '../../components/pageModel2';
 import { fonts } from '../../theme/fonts';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
+import { supabase } from '../../config/supabase';
+import * as FileSystem from 'expo-file-system';
 
-type NavigationProp = StackNavigationProp<AccountStackParamList>;
+type NavigationProp = StackNavigationProp<AccountStackParamList, 'EditAccount'>;
+type RouteProps = RouteProp<AccountStackParamList, 'EditAccount'>;
 
 type FormData = {
   firstName: string;
@@ -19,15 +22,39 @@ type FormData = {
 
 export default function EditAccount() {
   const navigation = useNavigation<NavigationProp>();
-  const { user } = useAuth() as { user: { photoURL?: string | null; firstName: string; lastName: string; email: string; id: string } | null };
+  const route = useRoute<RouteProps>();
+  const { user: authUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [imageHover, setImageHover] = useState(false);
-  const [userImage, setUserImage] = useState<string | null>(user && user.photoURL ? user.photoURL : null);
+  const [userImage, setUserImage] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
-    firstName: user && user.firstName ? user.firstName : '',
-    lastName: user && user.lastName ? user.lastName : '',
-    email: user && user.email ? user.email : '',
+    firstName: '',
+    lastName: '',
+    email: '',
   });
+  const [userData, setUserData] = useState<any>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      if (authUser?.id) {
+        const { data } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', authUser.id)
+          .single();
+        setUserData(data);
+        setUserImage(data?.profile_url ?? null);
+        setFormData({
+          firstName: data?.first_name ?? '',
+          lastName: data?.last_name ?? '',
+          email: authUser.email ?? '',
+        });
+      }
+      setProfileLoading(false);
+    }
+    fetchProfile();
+  }, [authUser]);
 
   const handleChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({
@@ -51,8 +78,37 @@ export default function EditAccount() {
     if (!result.canceled) {
       setLoading(true);
       try {
-        Alert.alert('Atenção', 'Funcionalidade de alterar foto desativada nesta versão.');
+        const fileUri = result.assets[0].uri;
+        const fileName = `${authUser.id}_${Date.now()}.jpg`;
+        const fileType = 'image/jpeg';
+        console.log('Iniciando fetch da imagem:', fileUri);
+        const response = await fetch(fileUri);
+        console.log('Response do fetch:', response);
+        if (!response.ok) throw new Error('Erro ao ler a imagem');
+        const blob = await response.blob();
+        console.log('Blob criado:', blob);
+        console.log('Blob size:', blob.size);
+        console.log('Iniciando upload para Supabase:', fileName);
+        const { error: uploadError } = await supabase.storage
+          .from('user-images')
+          .upload(fileName, blob, {
+            contentType: fileType,
+            upsert: true,
+          });
+        if (uploadError) throw uploadError;
+        const { data: publicUrlData } = supabase.storage
+          .from('user-images')
+          .getPublicUrl(fileName);
+        const publicUrl = publicUrlData?.publicURL ?? '';
+        console.log('URL pública gerada:', publicUrl);
+        await supabase
+          .from('users')
+          .update({ profile_url: publicUrl })
+          .eq('id', authUser.id);
+        setUserImage(publicUrl);
+        Alert.alert('Sucesso', 'Foto de perfil atualizada!');
       } catch (error: any) {
+        console.log('Erro no upload:', error);
         Alert.alert('Erro', error.message);
       } finally {
         setLoading(false);
@@ -61,26 +117,60 @@ export default function EditAccount() {
   };
 
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!authUser) return;
     if (!formData.firstName.trim() || !formData.lastName.trim()) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos.');
       return;
     }
     setLoading(true);
     try {
-      Alert.alert('Atenção', 'Funcionalidade de editar perfil desativada nesta versão.');
+      console.log('Iniciando atualização no Supabase...');
+      console.log('Dados a serem atualizados:', {
+        first_name: formData.firstName.trim(),
+        last_name: formData.lastName.trim(),
+        user_id: authUser.id
+      });
+
+      const { data, error } = await supabase
+        .from('users')
+        .update({
+          first_name: formData.firstName.trim(),
+          last_name: formData.lastName.trim()
+        })
+        .eq('id', authUser.id)
+        .select();
+
+      if (error) {
+        console.error('Erro do Supabase:', error);
+        throw error;
+      }
+
+      console.log('Resposta do Supabase:', data);
+      console.log('Dados atualizados com sucesso!');
+
+      Alert.alert('Sucesso', 'Dados atualizados com sucesso!');
+      navigation.goBack();
     } catch (error: any) {
-      Alert.alert('Erro', error.message);
+      console.error('Erro detalhado ao atualizar perfil:', error);
+      Alert.alert('Erro', 'Não foi possível atualizar os dados. Tente novamente.');
     } finally {
       setLoading(false);
     }
   };
 
+  if (profileLoading) {
+    return (
+      <View style={Styles.container}>
+        <Text style={Styles.label}>Carregando...</Text>
+      </View>
+    );
+  }
+
   return (
     <PageModel2 
       icon="person-outline" 
       title="conta" 
-      subtitle={`${user?.firstName} ${user?.lastName}`}
+      subtitle={`${formData.firstName} ${formData.lastName}`}
     >
       <View style={Styles.container}>
         <TouchableOpacity 

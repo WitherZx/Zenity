@@ -5,6 +5,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { LoginStackParamList } from '../../stacks/loginStack';
 import { fonts } from '../../theme/fonts';
 import { Ionicons } from '@expo/vector-icons';
+import { supabase } from '../../config/supabase';
 
 type NavigationProp = StackNavigationProp<LoginStackParamList>;
 
@@ -50,7 +51,32 @@ export default function SignUp() {
     if (!isFormValid()) return;
     setLoading(true);
     try {
-      Alert.alert('Atenção', 'Funcionalidade de cadastro desativada nesta versão.');
+      const { user, session, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+      });
+      if (error) {
+        Alert.alert('Erro', error.message || 'Erro ao criar conta.');
+      } else {
+        if (user) {
+          await supabase.auth.update({
+            data: {
+              first_name: formData.firstName,
+              last_name: formData.lastName,
+            }
+          });
+          const { error: insertError } = await supabase.from('users').insert({
+            id: user.id,
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            is_premium: false,
+            profile_url: 'https://cueqhaexkoojemvewdki.supabase.co/storage/v1/object/public/user-images//defaultUser.png',
+          });
+          if (insertError) {
+            Alert.alert('Erro', 'Conta criada, mas houve um erro ao criar o perfil.');
+          }
+        }
+      }
     } catch (error: any) {
       Alert.alert('Erro', error.message || 'Erro ao criar conta.');
     } finally {

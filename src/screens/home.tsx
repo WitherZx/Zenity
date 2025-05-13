@@ -1,8 +1,10 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import Icon from 'react-native-vector-icons/Ionicons';
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { Ionicons as Icon } from '@expo/vector-icons';
 import ModulesGrid from "../components/modulesGrid";
 import { useAuth } from "../contexts/AuthContext";
 import { fonts } from "../theme/fonts";
+import { supabase } from '../config/supabase';
 
 const formatUserName = (firstName?: string, lastName?: string) => {
     if (!firstName) return '';
@@ -18,7 +20,32 @@ const formatUserName = (firstName?: string, lastName?: string) => {
 };
 
 export default function Home() {
-    const { user } = useAuth();
+    const { user: authUser } = useAuth();
+    const [userData, setUserData] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchProfile() {
+            if (authUser?.id) {
+                const { data } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', authUser.id)
+                    .single();
+                setUserData(data);
+            }
+            setLoading(false);
+        }
+        fetchProfile();
+    }, [authUser]);
+
+    if (loading || !userData) {
+        return (
+            <View style={styles.container}>
+                <Text style={styles.adText}>Carregando...</Text>
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
@@ -27,9 +54,9 @@ export default function Home() {
             </View>
             <View style={styles.helloContainer}>
                 <Text style={styles.helloText}>
-                    Olá, <Text style={styles.helloName}>{formatUserName(user?.firstName, user?.lastName)}</Text>
+                    Olá, <Text style={styles.helloName}>{formatUserName(userData?.first_name ?? '', userData?.last_name ?? '')}</Text>
                 </Text>
-                {user?.isPremium ? (
+                {userData?.is_premium ? (
                     <Icon name="diamond" color={'#fff'} size={20}/>
                 ) : (
                     <TouchableOpacity>

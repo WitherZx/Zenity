@@ -1,6 +1,7 @@
+import React from 'react';
 import { View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { Ionicons } from '@expo/vector-icons';
 import HomeStack from '../stacks/homeStack';
 import AccountStack from '../stacks/accountStack';
 import PremiumStack from '../stacks/premiumStack';
@@ -62,7 +63,7 @@ export default function TabsNav() {
               iconName = 'help-circle-outline';
             }
 
-            return <Ionicons name={iconName} size={25} color={color} />;
+            return <Ionicons name={iconName as any} size={25} color={color} />;
           },
           tabBarActiveTintColor: '#0097B2',
           tabBarInactiveTintColor: '#91D2DE',
