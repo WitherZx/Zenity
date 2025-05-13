@@ -50,7 +50,7 @@ export default function Login() {
         } else if (error.message.includes('Email not confirmed')) {
           Alert.alert('Email não verificado', 'Por favor, verifique seu email antes de fazer login.');
         } else {
-          Alert.alert('Erro', error.message || 'Erro ao fazer login.');
+        Alert.alert('Erro', error.message || 'Erro ao fazer login.');
         }
         return;
       }

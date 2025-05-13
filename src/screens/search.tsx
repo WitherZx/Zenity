@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import ContentGrid from "../components/contentGrid";
 import ContentGridSkeleton from "../components/ContentGridSkeleton";
-import { modules } from "../data/modulesData";
+import { getModules } from "../data/modulesData";
 
 export default function Search() {
     const [searchText, setSearchText] = useState("");
@@ -20,6 +20,21 @@ export default function Search() {
             duration: number;
         }>;
     }>({ contents: [] });
+    const [modules, setModules] = useState<any[]>([]);
+    const [modulesLoading, setModulesLoading] = useState(true);
+
+    React.useEffect(() => {
+        async function fetchModules() {
+            try {
+                const data = await getModules();
+                setModules(data || []);
+            } catch (e) {
+                setModules([]);
+            }
+            setModulesLoading(false);
+        }
+        fetchModules();
+    }, []);
 
     const handleSearch = () => {
         setHasSearched(true);
@@ -36,16 +51,18 @@ export default function Search() {
             const searchLower = searchText.toLowerCase();
             let results: typeof searchResults.contents = [];
 
-            modules.forEach(module => {
-                const matchingContents = module.contents
-                    .filter(content => content.name.toLowerCase().includes(searchLower))
-                    .map(content => ({
-                        ...content,
-                        moduleId: module.id
-                    }));
+            if (modules && Array.isArray(modules)) {
+                modules.forEach(module => {
+                    const matchingContents = module.contents
+                        .filter((content: any) => content.name.toLowerCase().includes(searchLower))
+                        .map((content: any) => ({
+                            ...content,
+                            moduleId: module.id
+                        }));
 
-                results = [...results, ...matchingContents];
-            });
+                    results = [...results, ...matchingContents];
+                });
+            }
 
             setSearchResults({ contents: results });
             setIsLoading(false);
@@ -73,6 +90,14 @@ export default function Search() {
 
         return <ContentGrid contents={searchResults.contents} />;
     };
+
+    if (modulesLoading) {
+        return (
+            <View style={styles.container}>
+                <ActivityIndicator size="large" color="#0097B2" />
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>

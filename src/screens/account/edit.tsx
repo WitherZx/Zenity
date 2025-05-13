@@ -181,7 +181,7 @@ export default function EditAccount() {
           disabled={loading}
         >
           <Image 
-            source={userImage ? { uri: userImage } : require('../../../assets/images/defaultUser.png')} 
+            source={userImage ? { uri: userImage } : { uri: 'https://ui-avatars.com/api/?name=User' }} 
             style={Styles.image} 
           />
           {imageHover && !loading && (

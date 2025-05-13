@@ -1,14 +1,36 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Image, ScrollView } from "react-native";
 import { useRoute } from "@react-navigation/native";
-import { modules } from "../data/modulesData";
+import { getModules } from "../data/modulesData";
 import ContentGrid from "../components/contentGrid";
 
 export default function ModuleDetail() {
   const route = useRoute();
   const moduleId = (route.params as { moduleId?: string })?.moduleId;
+  const [module, setModule] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const module = modules.find((m) => m.id.toString() === moduleId?.toString());
+  useEffect(() => {
+    async function fetchModule() {
+      try {
+        const modules = await getModules();
+        const found = modules.find((m: any) => m.id.toString() === moduleId?.toString());
+        setModule(found || null);
+      } catch (e) {
+        setModule(null);
+      }
+      setLoading(false);
+    }
+    fetchModule();
+  }, [moduleId]);
+
+  if (loading) {
+    return (
+      <View style={Styles.container}>
+        <Text style={Styles.errorText}>Carregando módulo...</Text>
+      </View>
+    );
+  }
 
   if (!module) {
     return (
@@ -19,14 +41,14 @@ export default function ModuleDetail() {
   }
 
   // Adiciona o moduleId a cada conteúdo
-  const contentsWithModuleId = module.contents.map(content => ({
+  const contentsWithModuleId = module.contents.map((content: any) => ({
     ...content,
     moduleId: module.id
   }));
 
   return (
     <View style={Styles.container}>
-        <Image source={module.image1x1} style={Styles.mainImage} />
+        <Image source={module.image3x4 ? module.image3x4 : module.image1x1} style={Styles.mainImage} />
         <Text style={Styles.title}>{module.name}</Text>
         <ScrollView style={Styles.scrollContainer} showsVerticalScrollIndicator={false}>
             <ContentGrid contents={contentsWithModuleId} />

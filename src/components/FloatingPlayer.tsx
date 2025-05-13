@@ -3,7 +3,7 @@ import { View, StyleSheet, Image, Text, TouchableOpacity, Animated, PanResponder
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useNavigationState } from '@react-navigation/native';
 import { usePlayer } from '../contexts/PlayerContext';
-import { modules } from '../data/modulesData';
+import { getModules } from '../data/modulesData';
 
 export default function FloatingPlayer() {
   const navigation = useNavigation<any>();
@@ -13,6 +13,22 @@ export default function FloatingPlayer() {
   const slideAnim = React.useRef(new Animated.Value(0)).current;
   const opacityAnim = React.useRef(new Animated.Value(1)).current;
   const [isRemoving, setIsRemoving] = React.useState(false);
+
+  const [modules, setModules] = React.useState<any[]>([]);
+  const [modulesLoading, setModulesLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    async function fetchModules() {
+      try {
+        const data = await getModules();
+        setModules(data || []);
+      } catch (e) {
+        setModules([]);
+      }
+      setModulesLoading(false);
+    }
+    fetchModules();
+  }, []);
 
   // Reset do estado quando um novo conteúdo é carregado ou a navegação muda
   React.useEffect(() => {
@@ -222,66 +238,52 @@ export default function FloatingPlayer() {
   };
 
   const handleNext = () => {
-    try {
-      const currentModule = modules.find(m => m.id === currentContent?.moduleId);
-      if (!currentModule) return;
-
-      const currentIndex = currentModule.contents.findIndex(c => c.id === currentContent?.id);
-      if (currentIndex < currentModule.contents.length - 1) {
-        const nextContent = currentModule.contents[currentIndex + 1];
-        const wasPlaying = isPlaying; // Guarda o estado de reprodução atual
-        
-        // Atualiza apenas o conteúdo atual sem navegar
-        if (handleLoadAudio) {
-          handleLoadAudio({
-            id: nextContent.id,
-            moduleId: currentModule.id,
-            name: nextContent.name,
-            moduleName: currentModule.name,
-            thumbnail: nextContent.thumbnail,
-            file: nextContent.file
-          }).then(() => {
-            // Se estava tocando, continua tocando o próximo
-            if (wasPlaying) {
-              handlePlayPause();
-            }
-          });
-        }
+    if (!modules || !Array.isArray(modules) || !currentContent) return;
+    const currentModule = modules.find(m => m.id === currentContent?.moduleId);
+    if (!currentModule) return;
+    const currentIndex = currentModule.contents.findIndex((c: any) => c.id === currentContent?.id);
+    if (currentIndex < currentModule.contents.length - 1) {
+      const nextContent = currentModule.contents[currentIndex + 1];
+      const wasPlaying = isPlaying;
+      if (handleLoadAudio) {
+        handleLoadAudio({
+          id: nextContent.id,
+          moduleId: currentModule.id,
+          name: nextContent.name,
+          moduleName: currentModule.name,
+          thumbnail: nextContent.thumbnail,
+          file: nextContent.file
+        }).then(() => {
+          if (wasPlaying) {
+            handlePlayPause();
+          }
+        });
       }
-    } catch (error) {
-      console.error('Error handling next track:', error);
     }
   };
 
   const handlePrevious = () => {
-    try {
-      const currentModule = modules.find(m => m.id === currentContent?.moduleId);
-      if (!currentModule) return;
-
-      const currentIndex = currentModule.contents.findIndex(c => c.id === currentContent?.id);
-      if (currentIndex > 0) {
-        const previousContent = currentModule.contents[currentIndex - 1];
-        const wasPlaying = isPlaying; // Guarda o estado de reprodução atual
-        
-        // Atualiza apenas o conteúdo atual sem navegar
-        if (handleLoadAudio) {
-          handleLoadAudio({
-            id: previousContent.id,
-            moduleId: currentModule.id,
-            name: previousContent.name,
-            moduleName: currentModule.name,
-            thumbnail: previousContent.thumbnail,
-            file: previousContent.file
-          }).then(() => {
-            // Se estava tocando, continua tocando o anterior
-            if (wasPlaying) {
-              handlePlayPause();
-            }
-          });
-        }
+    if (!modules || !Array.isArray(modules) || !currentContent) return;
+    const currentModule = modules.find(m => m.id === currentContent?.moduleId);
+    if (!currentModule) return;
+    const currentIndex = currentModule.contents.findIndex((c: any) => c.id === currentContent?.id);
+    if (currentIndex > 0) {
+      const previousContent = currentModule.contents[currentIndex - 1];
+      const wasPlaying = isPlaying;
+      if (handleLoadAudio) {
+        handleLoadAudio({
+          id: previousContent.id,
+          moduleId: currentModule.id,
+          name: previousContent.name,
+          moduleName: currentModule.name,
+          thumbnail: previousContent.thumbnail,
+          file: previousContent.file
+        }).then(() => {
+          if (wasPlaying) {
+            handlePlayPause();
+          }
+        });
       }
-    } catch (error) {
-      console.error('Error handling previous track:', error);
     }
   };
 
@@ -291,30 +293,24 @@ export default function FloatingPlayer() {
   };
 
   const hasNextTrack = () => {
-    try {
-      const currentModule = modules.find(m => m.id === currentContent.moduleId);
-      if (!currentModule) return false;
-
-      const currentIndex = currentModule.contents.findIndex(c => c.id === currentContent.id);
-      return currentIndex < currentModule.contents.length - 1;
-    } catch (error) {
-      console.error('Error checking next track:', error);
-      return false;
-    }
+    if (!modules || !Array.isArray(modules) || !currentContent) return false;
+    const currentModule = modules.find(m => m.id === currentContent.moduleId);
+    if (!currentModule) return false;
+    const currentIndex = currentModule.contents.findIndex((c: any) => c.id === currentContent.id);
+    return currentIndex < currentModule.contents.length - 1;
   };
 
   const hasPreviousTrack = () => {
-    try {
-      const currentModule = modules.find(m => m.id === currentContent.moduleId);
-      if (!currentModule) return false;
-
-      const currentIndex = currentModule.contents.findIndex(c => c.id === currentContent.id);
-      return currentIndex > 0;
-    } catch (error) {
-      console.error('Error checking previous track:', error);
-      return false;
-    }
+    if (!modules || !Array.isArray(modules) || !currentContent) return false;
+    const currentModule = modules.find(m => m.id === currentContent.moduleId);
+    if (!currentModule) return false;
+    const currentIndex = currentModule.contents.findIndex((c: any) => c.id === currentContent.id);
+    return currentIndex > 0;
   };
+
+  if (modulesLoading) {
+    return null;
+  }
 
   return (
     <Animated.View 
@@ -355,7 +351,7 @@ export default function FloatingPlayer() {
           <Ionicons 
             name="play-skip-back" 
             size={24} 
-            color={hasPreviousTrack() ? "#0097B2" : "#ccc"} 
+            color={hasNextTrack() ? "#0097B2" : "#ccc"} 
           />
         </TouchableOpacity>
         

@@ -4,7 +4,7 @@ import { useRoute, useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { Audio, AVPlaybackStatus } from "expo-av";
 import { Ionicons } from '@expo/vector-icons';
-import { modules } from "../data/modulesData";
+import { getModules } from "../data/modulesData";
 import { usePlayer } from '../contexts/PlayerContext';
 import PlayerControlsSkeleton from '../components/PlayerControlsSkeleton';
 
@@ -25,6 +25,7 @@ type AudioItem = {
   name: string;
   duration: number;
   thumbnail: any;
+  moduleId: string;
 };
 
 const formatTime = (seconds: number): string => {
@@ -73,12 +74,27 @@ function EnhancedAudioPlayer({
   const progressRef = useRef<View>(null);
   const wasPlayingBeforeDrag = useRef(false);
 
+  const [modules, setModules] = useState<any[]>([]);
+  const [modulesLoading, setModulesLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchModules() {
+      try {
+        const data = await getModules();
+        setModules(data || []);
+      } catch (e) {
+        setModules([]);
+      }
+      setModulesLoading(false);
+    }
+    fetchModules();
+  }, []);
+
   // Carrega o áudio quando o índice ou fila mudam
   useEffect(() => {
-    // Verifica se já existe um áudio tocando e se é o mesmo que queremos carregar
     const currentAudio = state.queue[state.currentIndex];
+    if (!currentAudio) return; // Só tenta carregar se currentAudio existir
     if (currentContent && currentAudio && currentContent.id === currentAudio.id) {
-      // Se for o mesmo áudio, apenas atualiza o estado
       setState(prev => ({ 
         ...prev, 
         isLoading: false,
@@ -86,8 +102,6 @@ function EnhancedAudioPlayer({
       }));
       return;
     }
-
-    // Se não for o mesmo áudio, carrega o novo
     loadAudio();
   }, [state.currentIndex, state.queue]);
 
@@ -161,10 +175,15 @@ function EnhancedAudioPlayer({
     
     try {
       const currentAudio = state.queue[state.currentIndex];
-      if (!currentAudio?.file) throw new Error("Arquivo de áudio inválido");
-
-      const currentModule = modules.find(m => m.contents.some(c => c.id === currentAudio.id));
-      if (!currentModule) throw new Error("Módulo não encontrado");
+      if (!currentAudio?.file) {
+        setState(prev => ({
+          ...prev,
+          loadError: "Arquivo de áudio inválido",
+          isLoading: false,
+          loadingProgress: 0
+        }));
+        return;
+      }
 
       // Simula o progresso do carregamento
       const progressInterval = setInterval(() => {
@@ -176,7 +195,7 @@ function EnhancedAudioPlayer({
 
       await handleLoadAudio({
         id: currentAudio.id,
-        moduleId: currentModule.id,
+        moduleId: currentAudio.moduleId,
         name: currentAudio.name,
         moduleName: moduleTitle,
         thumbnail: currentAudio.thumbnail,
@@ -347,6 +366,10 @@ function EnhancedAudioPlayer({
     );
   }
 
+  if (modulesLoading) {
+    return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text>Carregando player...</Text></View>;
+  }
+
   return (
     <View style={playerStyles.container}>
       <View style={playerStyles.progressContainer}>
@@ -470,6 +493,32 @@ export default function Player() {
   const params = route.params as RouteParams;
   const { moduleId, contentId } = params;
 
+  const [modules, setModules] = React.useState<any[]>([]);
+  const [modulesLoading, setModulesLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    async function fetchModules() {
+      try {
+        const data = await getModules();
+        setModules(data || []);
+      } catch (e) {
+        setModules([]);
+      }
+      setModulesLoading(false);
+    }
+    fetchModules();
+  }, []);
+
+  if (modulesLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Carregando player...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   if (!moduleId || !contentId) {
     return (
       <SafeAreaView style={styles.container}>
@@ -485,7 +534,7 @@ export default function Player() {
     );
   }
   
-  const module = modules.find((m) => String(m.id) === String(moduleId));
+  const module = modules.find((m: any) => String(m.id) === String(moduleId));
 
   if (!module) {
     return (
@@ -501,7 +550,7 @@ export default function Player() {
     );
   }
 
-  const content = module.contents.find((c) => String(c.id) === String(contentId));
+  const content = module.contents.find((c: any) => String(c.id) === String(contentId));
 
   if (!content) {
     return (
@@ -518,15 +567,16 @@ export default function Player() {
     );
   }
 
-  const audioQueue = module.contents.map(item => ({
+  const audioQueue = module.contents.map((item: any) => ({
     id: item.id,
     file: item.file,
     name: item.name,
     duration: item.duration,
-    thumbnail: item.thumbnail
+    thumbnail: item.thumbnail,
+    moduleId: module.id
   }));
 
-  const initialIndex = audioQueue.findIndex(item => String(item.id) === String(contentId));
+  const initialIndex = audioQueue.findIndex((item: any) => String(item.id) === String(contentId));
 
   return (
     <SafeAreaView style={styles.container}>

@@ -60,7 +60,7 @@ const MyAccount: React.FC = () => {
         onPress={() => navigation.navigate('EditAccount', { currentUserData: userData })}
       >
         <Image 
-          source={userData?.profile_url ? { uri: userData.profile_url } : require('../../../assets/images/defaultUser.png')} 
+          source={userData?.profile_url ? { uri: userData.profile_url } : { uri: 'https://ui-avatars.com/api/?name=User' }} 
           style={styles.userImage} 
         />
       </TouchableOpacity>

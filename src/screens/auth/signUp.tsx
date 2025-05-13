@@ -66,11 +66,11 @@ export default function SignUp() {
             }
           });
           const { error: insertError } = await supabase.from('users').insert({
-            id: user.id,
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-            is_premium: false,
-            profile_url: 'https://cueqhaexkoojemvewdki.supabase.co/storage/v1/object/public/user-images//defaultUser.png',
+              id: user.id,
+              first_name: formData.firstName,
+              last_name: formData.lastName,
+              is_premium: false,
+              profile_url: 'https://cueqhaexkoojemvewdki.supabase.co/storage/v1/object/public/user-images//defaultUser.png',
           });
           if (insertError) {
             Alert.alert('Erro', 'Conta criada, mas houve um erro ao criar o perfil.');
