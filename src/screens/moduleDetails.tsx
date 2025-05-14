@@ -46,9 +46,11 @@ export default function ModuleDetail() {
     moduleId: module.id
   }));
 
+  // Debug: log do módulo antes do return
+  console.log('DEBUG module:', module);
   return (
     <View style={Styles.container}>
-        <Image source={module.image3x4 ? module.image3x4 : module.image1x1} style={Styles.mainImage} />
+        <Image source={module.image} style={Styles.mainImage} resizeMode="cover" />
         <Text style={Styles.title}>{module.name}</Text>
         <ScrollView style={Styles.scrollContainer} showsVerticalScrollIndicator={false}>
             <ContentGrid contents={contentsWithModuleId} />
@@ -79,11 +81,10 @@ const Styles = StyleSheet.create({
     marginTop: 20,
   },
   mainImage: {
-    maxHeight: "40%",
-    maxWidth: "100%",
-    aspectRatio: 1,
-    resizeMode: "cover",
+    width: '100%',
+    height: 350,
     borderRadius: 20,
+    marginBottom: 10,
   },
   errorText: {
     fontSize: 18,

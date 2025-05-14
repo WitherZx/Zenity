@@ -6,8 +6,7 @@ import { getModules } from "../data/modulesData";
 interface Module {
   id: string;
   name: string;
-  thumbnail: any;
-  image1x1: any;
+  image: any;
   contents: any[];
 }
 
@@ -37,7 +36,7 @@ export default function ModulesGrid() {
         {modules.map((module) => (
           <ContentModuleGrid
             key={module.id}
-            image={module.thumbnail}
+            image={module.image}
             text={module.name}
             moduleId={module.id}
           />

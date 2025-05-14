@@ -6,7 +6,7 @@ type Content = {
   id: string;
   moduleId: string;
   name: string;
-  thumbnail: any;
+  image: any;
   file: any;
   duration: number;
 };
@@ -29,7 +29,7 @@ export default function ContentGrid({ contents }: ContentGridProps) {
           key={`${item.moduleId}-${item.id}`}
           contentId={item.id}
           moduleId={item.moduleId}
-          image={item.thumbnail}
+          image={item.image}
           text={item.name}
           duration={item.duration}
         />

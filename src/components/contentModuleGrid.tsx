@@ -18,7 +18,7 @@ export default function ContentModuleGrid({ image, text, moduleId }: Props) {
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={() => navigation.navigate("ModuleDetails", { moduleId })} style={styles.container}>
-        <Image source={typeof image === "string" ? { uri: image } : image} style={styles.image} />
+        <Image source={image} style={styles.image} />
         <View style={styles.textContainer}>
           <Text style={styles.text}>{text}</Text>
         </View>

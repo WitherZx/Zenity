@@ -24,7 +24,7 @@ type AudioItem = {
   file: any;
   name: string;
   duration: number;
-  thumbnail: any;
+  image: any;
   moduleId: string;
 };
 
@@ -198,7 +198,7 @@ function EnhancedAudioPlayer({
         moduleId: currentAudio.moduleId,
         name: currentAudio.name,
         moduleName: moduleTitle,
-        thumbnail: currentAudio.thumbnail,
+        thumbnail: currentAudio.image,
         file: currentAudio.file,
         isLooping: state.isLooping
       });
@@ -572,7 +572,7 @@ export default function Player() {
     file: item.file,
     name: item.name,
     duration: item.duration,
-    thumbnail: item.thumbnail,
+    image: item.image,
     moduleId: module.id
   }));
 
@@ -585,7 +585,7 @@ export default function Player() {
       </TouchableOpacity>
       
       <View style={styles.contentContainer}>
-        <Image source={content.image3x4} style={styles.contentImage} resizeMode="cover" />
+        <Image source={content.image} style={styles.contentImage} resizeMode="cover" />
         <View>
           <Text style={styles.title}>{content.name}</Text>
           <Text style={styles.moduleTitle}>{module.name}</Text>        
