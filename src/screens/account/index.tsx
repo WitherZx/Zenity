@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Image, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Image, Text, TouchableOpacity, Animated } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import CustomButton from '../../components/button1';
@@ -9,6 +9,48 @@ import { AccountStackParamList } from '../../stacks/accountStack';
 
 type NavigationProp = StackNavigationProp<AccountStackParamList, 'AccountScreen'>;
 type RouteProps = RouteProp<AccountStackParamList, 'AccountScreen'>;
+
+function AccountSkeleton() {
+  const animatedValue = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(animatedValue, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(animatedValue, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    animation.start();
+    return () => animation.stop();
+  }, []);
+
+  const opacity = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.3, 0.7],
+  });
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.imageWrapper}>
+        <Animated.View style={[styles.skeletonAvatar, { opacity }]} />
+      </View>
+      <Animated.View style={[styles.skeletonName, { opacity }]} />
+      <View>
+        {[1, 2, 3].map((i) => (
+          <Animated.View key={i} style={[styles.skeletonButton, { opacity }]} />
+        ))}
+      </View>
+    </View>
+  );
+}
 
 const MyAccount: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -46,11 +88,7 @@ const MyAccount: React.FC = () => {
   }, [navigation, authUser]);
 
   if (loading || !userData) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.name}>Carregando...</Text>
-      </View>
-    );
+    return <AccountSkeleton />;
   }
 
   return (
@@ -110,6 +148,29 @@ const styles = StyleSheet.create({
     fontSize: 22,
     textAlign: 'center',
     color: '#fff',
+  },
+  skeletonAvatar: {
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: '#fff',
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+  skeletonName: {
+    height: 22,
+    width: '60%',
+    backgroundColor: '#fff',
+    borderRadius: 4,
+    alignSelf: 'center',
+    marginBottom: 30,
+  },
+  skeletonButton: {
+    height: 50,
+    width: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    marginVertical: 10,
   },
 });
 

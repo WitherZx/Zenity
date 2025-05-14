@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView, Animated, PanResponder, Alert } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView, Animated, PanResponder, Alert, ActivityIndicator } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { Audio, AVPlaybackStatus } from "expo-av";
@@ -153,9 +153,8 @@ function EnhancedAudioPlayer({
             undefined,
             true
           );
-          console.log('🎵 [Preload] Next audio preloaded successfully');
         } catch (error) {
-          console.warn('⚠️ [Preload] Failed to preload next audio:', error);
+          // Removido: console.warn('⚠️ [Preload] Failed to preload next audio:', error);
         }
       }
     };
@@ -367,7 +366,7 @@ function EnhancedAudioPlayer({
   }
 
   if (modulesLoading) {
-    return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text>Carregando player...</Text></View>;
+    return <PlayerControlsSkeleton />;
   }
 
   return (
@@ -487,6 +486,43 @@ function EnhancedAudioPlayer({
   );
 }
 
+function LoadingBar() {
+  const animatedValue = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    Animated.loop(
+      Animated.timing(animatedValue, {
+        toValue: 1,
+        duration: 1200,
+        useNativeDriver: false,
+      })
+    ).start();
+  }, []);
+
+  const width = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0%', '80%'],
+  });
+
+  return (
+    <View style={{
+      width: '80%',
+      height: 6,
+      backgroundColor: 'rgba(255,255,255,0.3)',
+      borderRadius: 3,
+      overflow: 'hidden',
+      marginTop: 20,
+    }}>
+      <Animated.View style={{
+        height: 6,
+        width,
+        backgroundColor: '#fff',
+        borderRadius: 3,
+      }} />
+    </View>
+  );
+}
+
 export default function Player() {
   const route = useRoute();
   const navigation = useNavigation<NavigationProp>();
@@ -511,11 +547,9 @@ export default function Player() {
 
   if (modulesLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Carregando player...</Text>
-        </View>
-      </SafeAreaView>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0CC0DF' }}>
+        <LoadingBar />
+      </View>
     );
   }
 

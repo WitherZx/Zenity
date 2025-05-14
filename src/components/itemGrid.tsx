@@ -23,9 +23,7 @@ export default function ItemGrid({ contentId, moduleId, image, text, duration }:
     const navigation = useNavigation<NavigationProps>();
 
     const handlePress = () => {
-        console.log("ItemGrid: Navegando para Player com:", { moduleId, contentId });
         if (!moduleId) {
-            console.error("ItemGrid: moduleId está undefined!");
             return;
         }
         navigation.navigate("Player", { moduleId, contentId });

@@ -81,14 +81,9 @@ export default function EditAccount() {
         const fileUri = result.assets[0].uri;
         const fileName = `${authUser.id}_${Date.now()}.jpg`;
         const fileType = 'image/jpeg';
-        console.log('Iniciando fetch da imagem:', fileUri);
         const response = await fetch(fileUri);
-        console.log('Response do fetch:', response);
         if (!response.ok) throw new Error('Erro ao ler a imagem');
         const blob = await response.blob();
-        console.log('Blob criado:', blob);
-        console.log('Blob size:', blob.size);
-        console.log('Iniciando upload para Supabase:', fileName);
         const { error: uploadError } = await supabase.storage
           .from('user-images')
           .upload(fileName, blob, {
@@ -100,7 +95,6 @@ export default function EditAccount() {
           .from('user-images')
           .getPublicUrl(fileName);
         const publicUrl = publicUrlData?.publicURL ?? '';
-        console.log('URL pública gerada:', publicUrl);
         await supabase
           .from('users')
           .update({ profile_url: publicUrl })
@@ -108,7 +102,6 @@ export default function EditAccount() {
         setUserImage(publicUrl);
         Alert.alert('Sucesso', 'Foto de perfil atualizada!');
       } catch (error: any) {
-        console.log('Erro no upload:', error);
         Alert.alert('Erro', error.message);
       } finally {
         setLoading(false);
@@ -124,13 +117,6 @@ export default function EditAccount() {
     }
     setLoading(true);
     try {
-      console.log('Iniciando atualização no Supabase...');
-      console.log('Dados a serem atualizados:', {
-        first_name: formData.firstName.trim(),
-        last_name: formData.lastName.trim(),
-        user_id: authUser.id
-      });
-
       const { data, error } = await supabase
         .from('users')
         .update({
@@ -141,17 +127,12 @@ export default function EditAccount() {
         .select();
 
       if (error) {
-        console.error('Erro do Supabase:', error);
         throw error;
       }
-
-      console.log('Resposta do Supabase:', data);
-      console.log('Dados atualizados com sucesso!');
 
       Alert.alert('Sucesso', 'Dados atualizados com sucesso!');
       navigation.goBack();
     } catch (error: any) {
-      console.error('Erro detalhado ao atualizar perfil:', error);
       Alert.alert('Erro', 'Não foi possível atualizar os dados. Tente novamente.');
     } finally {
       setLoading(false);

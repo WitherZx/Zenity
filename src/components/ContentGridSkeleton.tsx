@@ -43,7 +43,7 @@ export default function ContentGridSkeleton() {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {[1, 2, 3, 4, 5, 6].map((item) => (
+      {[1, 2, 3, 4].map((item) => (
         <React.Fragment key={item}>
           {renderSkeletonItem()}
         </React.Fragment>
@@ -72,7 +72,8 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 10,
     marginRight: 15,
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    resizeMode: 'cover',
   },
   textContainer: {
     flex: 1,
@@ -80,21 +81,21 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   titleBar: {
-    height: 16,
+    height: 14,
     width: '80%',
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255,255,255,0.7)',
     borderRadius: 4,
   },
   timeBar: {
     height: 14,
     width: '40%',
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255,255,255,0.7)',
     borderRadius: 4,
   },
   chevron: {
     width: 24,
     height: 24,
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255,255,255,0.7)',
     borderRadius: 12,
   },
 }); 

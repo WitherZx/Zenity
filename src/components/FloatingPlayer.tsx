@@ -111,18 +111,6 @@ export default function FloatingPlayer() {
     })
   ).current;
 
-  // Debug do ciclo de vida do componente
-  React.useEffect(() => {
-    console.log('FloatingPlayer mounted/updated:', {
-      hasCurrentContent: !!currentContent,
-      isPlaying,
-      currentContentId: currentContent?.id
-    });
-    return () => {
-      console.log('FloatingPlayer will unmount');
-    };
-  }, [currentContent, isPlaying]);
-  
   // Simplifica a verificação para mostrar/esconder o player flutuante
   const isInPlayer = useNavigationState(state => {
     if (!state?.routes) return false;
@@ -144,13 +132,6 @@ export default function FloatingPlayer() {
 
     // Verifica todas as rotas ativas
     return state.routes.some(isPlayerRoute);
-  });
-
-  // Debug da decisão de renderização
-  console.log('Render decision:', {
-    hasCurrentContent: !!currentContent,
-    isInPlayer,
-    willRender: !(!currentContent || isInPlayer)
   });
 
   // Só mostra o player flutuante se:

@@ -3,6 +3,7 @@ import { View, StyleSheet, Text, TextInput, TouchableOpacity, ActivityIndicator 
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import ContentGrid from "../components/contentGrid";
+import { Content } from "../components/contentGrid";
 import ContentGridSkeleton from "../components/ContentGridSkeleton";
 import { getModules } from "../data/modulesData";
 
@@ -10,16 +11,7 @@ export default function Search() {
     const [searchText, setSearchText] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
-    const [searchResults, setSearchResults] = useState<{
-        contents: Array<{
-            id: string;
-            moduleId: string;
-            name: string;
-            thumbnail: any;
-            file: any;
-            duration: number;
-        }>;
-    }>({ contents: [] });
+    const [searchResults, setSearchResults] = useState<{ contents: Content[] }>({ contents: [] });
     const [modules, setModules] = useState<any[]>([]);
     const [modulesLoading, setModulesLoading] = useState(true);
 
@@ -57,7 +49,8 @@ export default function Search() {
                         .filter((content: any) => content.name.toLowerCase().includes(searchLower))
                         .map((content: any) => ({
                             ...content,
-                            moduleId: module.id
+                            moduleId: module.id,
+                            image: content.image
                         }));
 
                     results = [...results, ...matchingContents];

@@ -56,8 +56,6 @@ export default function Login() {
       }
 
       if (user) {
-        console.log('Usuário autenticado:', user);
-        
         // Verifica se o email foi confirmado
         if (!user.email_confirmed_at) {
           Alert.alert(
@@ -74,8 +72,6 @@ export default function Login() {
           .select('*')
           .eq('id', user.id)
           .single();
-
-        console.log('Busca de usuário existente:', { userData, userError });
 
         if (userError && userError.code !== 'PGRST116') {
           // PGRST116 = 0 rows, ou seja, perfil não existe ainda

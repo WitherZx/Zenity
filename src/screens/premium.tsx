@@ -14,7 +14,7 @@ export default function Premium() {
         <Text style={styles.feature}>Melhor qualidade de áudio</Text>
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={() => console.log("Botão de assinar pressionado")}>
+      <TouchableOpacity style={styles.button} onPress={() => {}}>
         <Ionicons name={"diamond-outline"} size={20} color="#00A0B0" />
         <Text style={styles.buttonText}>Assinar o premium</Text>
       </TouchableOpacity>

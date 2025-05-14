@@ -54,63 +54,25 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [currentContent, setCurrentContent] = useState<PlayerContextData['currentContent']>(null);
 
   useEffect(() => {
-    console.warn('🎵 [PlayerProvider] Initialized');
-    return () => console.warn('🎵 [PlayerProvider] Cleanup');
+    return () => {};
   }, []);
 
   useEffect(() => {
-    console.warn('🎵 [PlayerProvider] State Update:', {
-      hasSound: !!sound,
-      isPlaying,
-      currentContentId: currentContent?.id,
-      isBuffering
-    });
-
-    const monitorAudioStatus = async () => {
-      if (sound) {
-        try {
-          const status = await sound.getStatusAsync();
-          console.warn('🎵 [Audio Status]', {
-            isLoaded: status.isLoaded,
-            ...(status.isLoaded ? {
-              isPlaying: status.isPlaying,
-              positionMillis: status.positionMillis,
-              durationMillis: status.durationMillis,
-              isBuffering: status.isBuffering,
-              shouldPlay: status.shouldPlay,
-              isLooping: status.isLooping,
-              volume: status.volume,
-              didJustFinish: status.didJustFinish
-            } : {})
-          });
-        } catch (error) {
-          console.error('❌ [Audio Status Error]:', error);
-        }
-      }
-    };
-
-    monitorAudioStatus();
   }, [sound, isPlaying, currentContent, isBuffering]);
 
   const handleUnloadAudio = useCallback(async () => {
-    console.log('[UnloadAudio] Starting...');
     try {
       if (sound) {
         const status = await sound.getStatusAsync();
-        console.log('[UnloadAudio] Current status:', status);
         
         await sound.unloadAsync();
-        console.log('[UnloadAudio] Sound unloaded successfully');
         
         setSound(null);
         setIsPlaying(false);
         setCurrentContent(null);
         setBufferProgress(0);
-      } else {
-        console.log('[UnloadAudio] No sound to unload');
       }
     } catch (error) {
-      console.error('[UnloadAudio] Error:', error);
       setSound(null);
       setIsPlaying(false);
       setCurrentContent(null);
@@ -127,7 +89,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     thumbnail: any;
     isLooping?: boolean;
   }) => {
-    console.warn('🎵 [LoadAudio] Starting load process');
     setIsBuffering(true);
     setBufferProgress(0);
     
@@ -180,8 +141,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         true
       );
 
-      console.warn('🎵 [LoadAudio] Sound created successfully');
-      
       // Set the new sound and content
       setSound(newSound);
       setCurrentContent({
@@ -199,7 +158,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       setIsBuffering(false);
 
     } catch (error) {
-      console.error('❌ [LoadAudio] Error:', error);
       setIsBuffering(false);
       setBufferProgress(0);
       await handleUnloadAudio();
@@ -233,45 +191,30 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch (error) {
-      console.error('[PlayPause] Error:', error);
     }
   }, [sound, isPlaying]);
 
   const handleSetPosition = useCallback(async (position: number) => {
-    console.log('[SetPosition] Attempting to set position:', position);
     if (!sound) {
-      console.log('[SetPosition] No sound available');
       return;
     }
     
     try {
       await sound.setPositionAsync(position);
-      const newStatus = await sound.getStatusAsync();
-      console.log('[SetPosition] New status:', newStatus);
     } catch (error) {
-      console.error('[SetPosition] Error:', error);
     }
   }, [sound]);
 
   const handleSetLooping = useCallback(async (isLooping: boolean) => {
-    console.log('[SetLooping] Attempting to set looping:', isLooping);
     try {
       if (sound?.getStatusAsync) {
         const status = await sound.getStatusAsync();
-        console.log('[SetLooping] Current status:', status);
         
         if (status.isLoaded) {
           await sound.setIsLoopingAsync(isLooping);
-          const newStatus = await sound.getStatusAsync();
-          console.log('[SetLooping] New status:', newStatus);
-        } else {
-          console.log('[SetLooping] Sound not loaded');
         }
-      } else {
-        console.log('[SetLooping] No sound available');
       }
     } catch (error) {
-      console.error('[SetLooping] Error:', error);
     }
   }, [sound]);
 

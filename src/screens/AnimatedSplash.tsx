@@ -1,30 +1,37 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Image, Animated, StyleSheet } from 'react-native';
+import { View, Image, Animated, StyleSheet, Dimensions } from 'react-native';
 
 interface AnimatedSplashProps {
   onAnimationComplete: () => void;
 }
 
 export default function AnimatedSplash({ onAnimationComplete }: AnimatedSplashProps) {
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const { width: screenWidth } = Dimensions.get('window');
 
   useEffect(() => {
     Animated.sequence([
-      // Aguarda um momento para garantir que a splash screen nativa foi removida
-      Animated.delay(50),
+      // Fade in inicial
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      // Aguarda um momento
+      Animated.delay(800),
       // Anima o logo
       Animated.parallel([
         // Fade out suave
         Animated.timing(fadeAnim, {
           toValue: 0,
-          duration: 600,
+          duration: 800,
           useNativeDriver: true,
         }),
-        // Pequeno efeito de zoom out
+        // Efeito de zoom out suave
         Animated.timing(scaleAnim, {
-          toValue: 0.98,
-          duration: 600,
+          toValue: 0.95,
+          duration: 800,
           useNativeDriver: true,
         }),
       ]),
@@ -45,8 +52,8 @@ export default function AnimatedSplash({ onAnimationComplete }: AnimatedSplashPr
         ]}
       >
         <Image
-          source={require('../../assets/images/logo2.png')}
-          style={styles.logo}
+          source={require('../../assets/images/logo.png')}
+          style={[styles.logo, { width: screenWidth * 0.5 }]}
           resizeMode="contain"
         />
       </Animated.View>
@@ -66,7 +73,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logo: {
-    width: 200,  // Tamanho fixo que deve corresponder à splash screen nativa
-    height: 200, // Tamanho fixo que deve corresponder à splash screen nativa
+    aspectRatio: 1,
+    height: undefined,
   },
 }); 

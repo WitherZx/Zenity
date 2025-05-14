@@ -2,7 +2,7 @@ import React from "react";
 import { ScrollView, StyleSheet } from "react-native";
 import ItemGrid from "./itemGrid"; // Certifique-se de que o caminho está correto
 
-type Content = {
+export type Content = {
   id: string;
   moduleId: string;
   name: string;
@@ -16,8 +16,6 @@ type ContentGridProps = {
 };
 
 export default function ContentGrid({ contents }: ContentGridProps) {
-  console.log("ContentGrid: Recebendo contents:", contents);
-
   if (!contents || contents.length === 0) {
     return null;
   }
