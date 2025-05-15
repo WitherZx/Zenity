@@ -110,7 +110,7 @@ export default function FloatingPlayer() {
       },
     })
   ).current;
-
+  
   // Simplifica a verificação para mostrar/esconder o player flutuante
   const isInPlayer = useNavigationState(state => {
     if (!state?.routes) return false;
@@ -220,51 +220,51 @@ export default function FloatingPlayer() {
 
   const handleNext = () => {
     if (!modules || !Array.isArray(modules) || !currentContent) return;
-    const currentModule = modules.find(m => m.id === currentContent?.moduleId);
-    if (!currentModule) return;
+      const currentModule = modules.find(m => m.id === currentContent?.moduleId);
+      if (!currentModule) return;
     const currentIndex = currentModule.contents.findIndex((c: any) => c.id === currentContent?.id);
-    if (currentIndex < currentModule.contents.length - 1) {
-      const nextContent = currentModule.contents[currentIndex + 1];
+      if (currentIndex < currentModule.contents.length - 1) {
+        const nextContent = currentModule.contents[currentIndex + 1];
       const wasPlaying = isPlaying;
-      if (handleLoadAudio) {
-        handleLoadAudio({
-          id: nextContent.id,
-          moduleId: currentModule.id,
-          name: nextContent.name,
-          moduleName: currentModule.name,
-          thumbnail: nextContent.thumbnail,
-          file: nextContent.file
-        }).then(() => {
-          if (wasPlaying) {
-            handlePlayPause();
-          }
-        });
-      }
+        if (handleLoadAudio) {
+          handleLoadAudio({
+            id: nextContent.id,
+            moduleId: currentModule.id,
+            name: nextContent.name,
+            moduleName: currentModule.name,
+            thumbnail: nextContent.thumbnail,
+            file: nextContent.file
+          }).then(() => {
+            if (wasPlaying) {
+              handlePlayPause();
+            }
+          });
+        }
     }
   };
 
   const handlePrevious = () => {
     if (!modules || !Array.isArray(modules) || !currentContent) return;
-    const currentModule = modules.find(m => m.id === currentContent?.moduleId);
-    if (!currentModule) return;
+      const currentModule = modules.find(m => m.id === currentContent?.moduleId);
+      if (!currentModule) return;
     const currentIndex = currentModule.contents.findIndex((c: any) => c.id === currentContent?.id);
-    if (currentIndex > 0) {
-      const previousContent = currentModule.contents[currentIndex - 1];
+      if (currentIndex > 0) {
+        const previousContent = currentModule.contents[currentIndex - 1];
       const wasPlaying = isPlaying;
-      if (handleLoadAudio) {
-        handleLoadAudio({
-          id: previousContent.id,
-          moduleId: currentModule.id,
-          name: previousContent.name,
-          moduleName: currentModule.name,
-          thumbnail: previousContent.thumbnail,
-          file: previousContent.file
-        }).then(() => {
-          if (wasPlaying) {
-            handlePlayPause();
-          }
-        });
-      }
+        if (handleLoadAudio) {
+          handleLoadAudio({
+            id: previousContent.id,
+            moduleId: currentModule.id,
+            name: previousContent.name,
+            moduleName: currentModule.name,
+            thumbnail: previousContent.thumbnail,
+            file: previousContent.file
+          }).then(() => {
+            if (wasPlaying) {
+              handlePlayPause();
+            }
+          });
+        }
     }
   };
 
@@ -275,18 +275,18 @@ export default function FloatingPlayer() {
 
   const hasNextTrack = () => {
     if (!modules || !Array.isArray(modules) || !currentContent) return false;
-    const currentModule = modules.find(m => m.id === currentContent.moduleId);
-    if (!currentModule) return false;
+      const currentModule = modules.find(m => m.id === currentContent.moduleId);
+      if (!currentModule) return false;
     const currentIndex = currentModule.contents.findIndex((c: any) => c.id === currentContent.id);
-    return currentIndex < currentModule.contents.length - 1;
+      return currentIndex < currentModule.contents.length - 1;
   };
 
   const hasPreviousTrack = () => {
     if (!modules || !Array.isArray(modules) || !currentContent) return false;
-    const currentModule = modules.find(m => m.id === currentContent.moduleId);
-    if (!currentModule) return false;
+      const currentModule = modules.find(m => m.id === currentContent.moduleId);
+      if (!currentModule) return false;
     const currentIndex = currentModule.contents.findIndex((c: any) => c.id === currentContent.id);
-    return currentIndex > 0;
+      return currentIndex > 0;
   };
 
   if (modulesLoading) {

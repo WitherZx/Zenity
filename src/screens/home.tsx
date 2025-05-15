@@ -5,6 +5,8 @@ import ModulesGrid from "../components/modulesGrid";
 import { useAuth } from "../contexts/AuthContext";
 import { fonts } from "../theme/fonts";
 import { supabase } from '../config/supabase';
+// import { AdBanner } from '../components/AdBanner';
+// import { BannerAdSize } from 'react-native-google-mobile-ads';
 
 const formatUserName = (firstName?: string, lastName?: string) => {
     if (!firstName) return '';
@@ -49,9 +51,13 @@ export default function Home() {
 
     return (
         <View style={styles.container}>
-            <View style={styles.adContainer}>
-                <Text style={styles.adText}>Anúncio</Text>
-            </View>
+            {/* <View style={styles.adContainer}>
+                <AdBanner 
+                    size={BannerAdSize.BANNER}
+                    unitId="ca-app-pub-5233713899126724/7862480433"
+                    testMode={true}
+                />
+            </View> */}
             <View style={styles.helloContainer}>
                 <Text style={styles.helloText}>
                     Olá, <Text style={styles.helloName}>{formatUserName(userData?.first_name ?? '', userData?.last_name ?? '')}</Text>
@@ -80,8 +86,12 @@ const styles = StyleSheet.create({
     },
     adContainer: {
         borderRadius: 10,
-        padding: 30,
-        backgroundColor: '#24ABC2'
+        backgroundColor: '#24ABC2',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        height: 50, // altura padrão do banner
+        overflow: 'hidden'
     },
     adText: {
         color: '#fff',

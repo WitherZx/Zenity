@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Zenity",
-    "slug": "Zenity",
+    "slug": "zenity",
     "scheme": "zenity",
     "main": "./src/index.js",
     "version": "1.0.0",
@@ -20,7 +20,8 @@
       "infoPlist": {
         "UIBackgroundModes": [
           "audio"
-        ]
+        ],
+        "GADApplicationIdentifier": "ca-app-pub-5233713899126724~8976251551"
       }
     },
     "android": {
@@ -31,7 +32,10 @@
       },
       "permissions": [
         "android.permission.MODIFY_AUDIO_SETTINGS"
-      ]
+      ],
+      "config": {
+        "googleMobileAdsAppId": "ca-app-pub-5233713899126724~8976251551"
+      }
     },
     "web": {
       "favicon": "./assets/images/logo2.png"
@@ -42,13 +46,25 @@
         {
           "microphonePermission": false
         }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "android": {
+            "appId": "ca-app-pub-5233713899126724~8976251551"
+          },
+          "ios": {
+            "appId": "ca-app-pub-5233713899126724~8976251551"
+          }
+        }
       ]
     ],
     "extra": {
       "eas": {
-        "projectId": "be4c53e1-c566-44ad-8f0f-4588cec5609e"
+        "projectId": "b0f5c296-95d4-48fb-a938-8eb0e50cae23"
       }
     },
-    "jsEngine": "jsc"
+    "jsEngine": "jsc",
+    "owner": "ho-apps-ltda"
   }
 }

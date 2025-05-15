@@ -17,16 +17,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  async function fetchUserProfile(authUser: any) {
+    if (!authUser) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+    // Busca o perfil completo do Supabase
+    const { data } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', authUser.id)
+      .single();
+    setUser({ ...authUser, ...data });
+    setLoading(false);
+  }
+
   useEffect(() => {
     // Checa o usuário atual ao iniciar
     const session = supabase.auth.session();
-    setUser(session?.user ?? null);
-    setLoading(false);
+    fetchUserProfile(session?.user ?? null);
 
     // Listener para mudanças de autenticação
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
+      fetchUserProfile(session?.user ?? null);
     });
 
     return () => {

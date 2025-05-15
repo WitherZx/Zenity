@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { Audio } from 'expo-av';
 import { StyleSheet } from 'react-native';
+// import { InterstitialAd, AdEventType } from 'react-native-google-mobile-ads';
+// import { useAuth } from '../contexts/AuthContext';
 
 interface PlayerContextData {
   isPlaying: boolean;
@@ -45,6 +47,24 @@ const PlayerContext = createContext<PlayerContextData>({
 
 const BUFFER_THRESHOLD = 5000; // 5 segundos de buffer necessário
 const UPDATE_INTERVAL = 100; // Atualiza o buffer a cada 100ms
+
+// const INTERSTITIAL_AD_UNIT_ID = __DEV__
+//   ? 'ca-app-pub-3940256099942544/1033173712' // ID de teste do Google
+//   : 'ca-app-pub-5233713899126724/7937661732'; // Seu ID real
+
+// function showInterstitialAd(onClosed: () => void) {
+//   const interstitial = InterstitialAd.createForAdRequest(INTERSTITIAL_AD_UNIT_ID, {
+//     requestNonPersonalizedAdsOnly: true,
+//   });
+//   const unsubscribe = interstitial.onAdEvent((type) => {
+//     if (type === AdEventType.CLOSED || type === AdEventType.ERROR) {
+//       unsubscribe();
+//       onClosed();
+//     }
+//   });
+//   interstitial.load();
+//   interstitial.show();
+// }
 
 export function PlayerProvider({ children }: { children: ReactNode }) {
   const [sound, setSound] = useState<Audio.Sound | null>(null);
@@ -140,7 +160,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         },
         true
       );
-
+      
       // Set the new sound and content
       setSound(newSound);
       setCurrentContent({
@@ -168,15 +188,40 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const handlePlayPause = useCallback(async () => {
     if (!sound) return;
 
+    // --- INTEGRAÇÃO PREMIUM ---
+    // Descomente para ativar na build nativa:
+    // const { user } = useAuth();
+    // const isPremium = !!user?.is_premium;
+    // if (!isPremium && !isPlaying) {
+    //   showInterstitialAd(async () => {
+    //     // Após fechar o anúncio, executa o play normal
+    //     try {
+    //       const status = await sound.getStatusAsync();
+    //       if (status.isLoaded) {
+    //         const bufferAhead = (status.playableDurationMillis ?? 0) - status.positionMillis;
+    //         if (bufferAhead >= BUFFER_THRESHOLD) {
+    //           await sound.playAsync();
+    //           setIsPlaying(true);
+    //           setIsBuffering(false);
+    //         } else {
+    //           setIsBuffering(true);
+    //           await sound.playAsync();
+    //           await sound.pauseAsync();
+    //         }
+    //       }
+    //     } catch (error) {}
+    //   });
+    //   return;
+    // }
+    // --- FIM INTEGRAÇÃO PREMIUM ---
+
     try {
       const status = await sound.getStatusAsync();
-      
       if (status.isLoaded) {
         if (isPlaying) {
           await sound.pauseAsync();
           setIsPlaying(false);
         } else {
-          // Verifica se tem buffer suficiente antes de tocar
           const bufferAhead = (status.playableDurationMillis ?? 0) - status.positionMillis;
           if (bufferAhead >= BUFFER_THRESHOLD) {
             await sound.playAsync();
@@ -184,14 +229,12 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
             setIsBuffering(false);
           } else {
             setIsBuffering(true);
-            // Inicia o processo de buffering
             await sound.playAsync();
             await sound.pauseAsync();
           }
         }
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   }, [sound, isPlaying]);
 
   const handleSetPosition = useCallback(async (position: number) => {

@@ -79,12 +79,12 @@ export default function ModulesGrid() {
     <ScrollView showsVerticalScrollIndicator={false}>
       <View style={styles.grid}>
         {modules.map((module) => (
-          <ContentModuleGrid
-            key={module.id}
+        <ContentModuleGrid
+          key={module.id}
             image={module.image}
-            text={module.name}
-            moduleId={module.id}
-          />
+          text={module.name}
+          moduleId={module.id}
+        />
         ))}
       </View>
     </ScrollView>

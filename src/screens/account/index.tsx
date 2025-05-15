@@ -6,6 +6,7 @@ import CustomButton from '../../components/button1';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../config/supabase';
 import { AccountStackParamList } from '../../stacks/accountStack';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 type NavigationProp = StackNavigationProp<AccountStackParamList, 'AccountScreen'>;
 type RouteProps = RouteProp<AccountStackParamList, 'AccountScreen'>;
@@ -102,18 +103,37 @@ const MyAccount: React.FC = () => {
           style={styles.userImage} 
         />
       </TouchableOpacity>
+      <View>
+      {userData?.is_premium && (
+        <View style={{
+          backgroundColor: '#24ABC2',
+          borderRadius: 10,
+          padding: 10,
+          marginVertical: 10,
+          alignItems: 'center',
+          flexDirection: 'row',
+          justifyContent: 'center',
+          gap: 8,
+        }}>
+          <Text style={{ color: '#fff', fontWeight: 'bold', marginRight: 6 }}>Usuário Premium</Text>
+          <Icon name="diamond" color={'#fff'} size={18}/>
+        </View>
+      )}
       <Text style={styles.name}>{userData?.first_name ?? ''} {userData?.last_name ?? ''}</Text>
+      </View>
       <View>
         <CustomButton 
           text="Editar dados" 
           iconName="user" 
           onPress={() => navigation.navigate('EditAccount', { currentUserData: userData })} 
         />
-        <CustomButton 
-          text="Assinar Premium" 
-          iconName="diamond" 
-          onPress={() => navigation.navigate('Premium')} 
-        />
+        {!userData?.is_premium && (
+          <CustomButton 
+            text="Assinar Premium" 
+            iconName="diamond" 
+            onPress={() => navigation.navigate('Premium')} 
+          />
+        )}
         <CustomButton 
           text="Sair/Trocar de conta" 
           iconName="sign-out" 

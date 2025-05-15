@@ -2,8 +2,10 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import PageModel2 from "../components/pageModel2"; // Ajuste o caminho conforme necessário
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Premium() {
+  const { user } = useAuth();
   return (
     <PageModel2 icon="diamond-outline" title="Plano Premium" subtitle="Assinatura">
       <View style={styles.card}>
@@ -13,11 +15,17 @@ export default function Premium() {
         <Text style={styles.feature}>Sem anúncios</Text>
         <Text style={styles.feature}>Melhor qualidade de áudio</Text>
       </View>
-
-      <TouchableOpacity style={styles.button} onPress={() => {}}>
-        <Ionicons name={"diamond-outline"} size={20} color="#00A0B0" />
-        <Text style={styles.buttonText}>Assinar o premium</Text>
-      </TouchableOpacity>
+      {!user?.is_premium ? (
+        <TouchableOpacity style={styles.button} onPress={() => {}}>
+          <Ionicons name={"diamond-outline"} size={20} color="#00A0B0" />
+          <Text style={styles.buttonText}>Assinar o premium</Text>
+        </TouchableOpacity>
+      ) : (
+        <View style={[styles.button, { backgroundColor: '#24ABC2' }]}> 
+          <Ionicons name={"diamond"} size={20} color="#fff" />
+          <Text style={[styles.buttonText, { color: '#fff' }]}>Você já é premium</Text>
+        </View>
+      )}
     </PageModel2>
   );
 }

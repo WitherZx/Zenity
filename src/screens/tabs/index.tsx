@@ -9,10 +9,12 @@ import FloatingPlayer from '../../components/FloatingPlayer';
 import { useNavigationState } from '@react-navigation/native';
 import SearchStack from '../stacks/searchStack';
 import { tabScreenOptions } from '../stacks/animations';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function TabsNav() {
   const Tabs = createBottomTabNavigator();
   const navigationState = useNavigationState(state => state);
+  const { user } = useAuth();
 
   // Função para verificar se está na Player
   const isInPlayer = () => {
@@ -73,7 +75,7 @@ export default function TabsNav() {
         <Tabs.Screen name="Inicio" component={HomeStack} />
         <Tabs.Screen name="Minha Conta" component={AccountStack} />
         <Tabs.Screen name="Busca" component={SearchStack} />
-        <Tabs.Screen name="Premium" component={PremiumStack} />
+        {!user?.is_premium && <Tabs.Screen name="Premium" component={PremiumStack} />}
       </Tabs.Navigator>
       <FloatingPlayer />
     </View>
