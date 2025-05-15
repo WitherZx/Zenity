@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, StyleSheet, Image, Text, TouchableOpacity, Animated } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -57,40 +57,72 @@ const MyAccount: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
   const { user: authUser, signOut } = useAuth();
+  if (!authUser) {
+    console.log('MyAccount: sem authUser, retornando null');
+    return null;
+  }
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async () => {
-    if (authUser?.id) {
+  // Flag para evitar setState após desmontagem
+  const isMountedRef = React.useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const fetchProfile = useCallback(async () => {
+    if (!authUser?.id) {
+      if (isMountedRef.current) setLoading(false);
+      return;
+    }
+    try {
       const { data } = await supabase
         .from('users')
         .select('*')
         .eq('id', authUser.id)
         .single();
-      setUserData(data);
+      if (isMountedRef.current) setUserData(data);
+      console.log('fetchProfile: setUserData', data);
+    } catch (error) {
+      console.error('fetchProfile: erro', error);
+    } finally {
+      if (isMountedRef.current) setLoading(false);
+      console.log('fetchProfile: setLoading(false)');
     }
-    setLoading(false);
-  };
+  }, [authUser?.id]);
 
   useEffect(() => {
+    if (!authUser?.id) return;
+    console.log('useEffect[authUser?.id, fetchProfile]: chamando fetchProfile');
     fetchProfile();
+  }, [authUser?.id, fetchProfile]);
+
+  useEffect(() => {
+    if (!authUser) {
+      console.log('useEffect[authUser]: deslogou, limpando userData e loading');
+      if (isMountedRef.current) setUserData(null);
+      if (isMountedRef.current) setLoading(false);
+    }
   }, [authUser]);
 
-  // Adiciona um listener para quando a tela receber foco
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       if (authUser?.id) {
-        setLoading(true);
+        console.log('navigation focus: chamando fetchProfile');
         fetchProfile();
       }
     });
-
     return unsubscribe;
-  }, [navigation, authUser]);
+  }, [navigation, authUser?.id, fetchProfile]);
 
   if (loading || !userData) {
+    console.log('MyAccount: loading ou !userData, renderizando AccountSkeleton');
     return <AccountSkeleton />;
   }
+  console.log('MyAccount: renderizando dados do usuário', userData);
 
   return (
     <View style={styles.container}>
