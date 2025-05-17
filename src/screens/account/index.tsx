@@ -191,6 +191,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   userImage: {
+    backgroundColor: '#24ABC2',
     width: 150,
     height: 150,
     borderRadius: 75,

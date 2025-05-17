@@ -4,13 +4,13 @@
     "slug": "zenity",
     "scheme": "zenity",
     "main": "./src/index.js",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "orientation": "portrait",
-    "icon": "./assets/images/logo2.png",
+    "icon": "./assets/images/adaptive-icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/logo2.png",
+      "image": "./assets/images/adaptive-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#0CC0DF"
     },
@@ -26,16 +26,14 @@
     },
     "android": {
       "package": "com.zenity.app",
+      "versionCode": 3,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/logo2.png",
+        "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#0CC0DF"
       },
       "permissions": [
         "android.permission.MODIFY_AUDIO_SETTINGS"
-      ],
-      "config": {
-        "googleMobileAdsAppId": "ca-app-pub-5233713899126724~8976251551"
-      }
+      ]
     },
     "web": {
       "favicon": "./assets/images/logo2.png"
@@ -45,17 +43,6 @@
         "expo-av",
         {
           "microphonePermission": false
-        }
-      ],
-      [
-        "react-native-google-mobile-ads",
-        {
-          "android": {
-            "appId": "ca-app-pub-5233713899126724~8976251551"
-          },
-          "ios": {
-            "appId": "ca-app-pub-5233713899126724~8976251551"
-          }
         }
       ]
     ],
