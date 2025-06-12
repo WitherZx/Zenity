@@ -16,13 +16,16 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.zenity.app",
+      "bundleIdentifier": "com.zenity.ios",
       "infoPlist": {
         "UIBackgroundModes": [
           "audio"
         ],
-        "GADApplicationIdentifier": "ca-app-pub-5233713899126724~8976251551"
-      }
+        "GADApplicationIdentifier": "ca-app-pub-5233713899126724~8976251551",
+        "CFBundleIconName": "AppIcon"
+      },
+      "buildNumber": "1",
+      "requireFullScreen": true
     },
     "android": {
       "package": "com.zenity.app",

@@ -13,7 +13,11 @@
     "preview": {
       "distribution": "internal"
     },
-    "production": {},
+    "production": {
+      "ios": {
+        "resourceClass": "m-medium"
+      }
+    },
     "development-simulator": {
       "developmentClient": true,
       "distribution": "internal",
@@ -21,6 +25,15 @@
         "simulator": true
       },
       "environment": "development"
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "adm@hnoapps.com",
+        "ascAppId": "6746874584",
+        "appleTeamId": "S3RDH669C7"
+      }
     }
   }
 }
