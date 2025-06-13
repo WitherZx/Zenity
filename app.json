@@ -4,7 +4,7 @@
     "slug": "zenity",
     "scheme": "zenity",
     "main": "./src/index.js",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/images/adaptive-icon.png",
     "userInterfaceStyle": "light",
@@ -29,7 +29,7 @@
           }
         ]
       },
-      "buildNumber": "1.0.2",
+      "buildNumber": "4",
       "requireFullScreen": true
     },
     "android": {
