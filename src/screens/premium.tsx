@@ -1,24 +1,66 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import PageModel2 from "../components/pageModel2"; // Ajuste o caminho conforme necessário
 import { useAuth } from '../contexts/AuthContext';
+import * as RNIap from 'react-native-iap';
+
+// Product ID correto conforme App Store Connect
+const itemSkus = ['premium_service_IOS'];
 
 export default function Premium() {
   const { user } = useAuth();
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    RNIap.initConnection().then(async () => {
+      try {
+        const items = await RNIap.getProducts({ skus: itemSkus });
+        setProducts(items);
+      } catch (err) {
+        Alert.alert('Erro', 'Não foi possível buscar os produtos de assinatura. Verifique sua conexão ou tente novamente mais tarde.');
+      }
+    });
+    return () => {
+      RNIap.endConnection();
+    };
+  }, []);
+
+  const comprar = async (sku: string) => {
+    setLoading(true);
+    try {
+      await RNIap.requestPurchase({ sku });
+    } catch (err) {
+      Alert.alert('Erro', 'Não foi possível completar a compra. Certifique-se de estar em um dispositivo real e com o produto ativo no painel.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <PageModel2 icon="diamond-outline" title="Plano Premium" subtitle="Assinatura">
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Premium</Text>
-        <Text style={styles.price}>R$9,90/mês</Text>
+        <Text style={styles.price}>R$9,90/Semana</Text>
         <View style={styles.divider} />
         <Text style={styles.feature}>Sem anúncios</Text>
         <Text style={styles.feature}>Melhor qualidade de áudio</Text>
       </View>
       {!user?.is_premium ? (
-        <TouchableOpacity style={styles.button} onPress={() => {}}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => {
+            if (products.length > 0) {
+              comprar(products[0].productId);
+            } else {
+              Alert.alert('Produto não encontrado', 'Tente novamente mais tarde.');
+            }
+          }}
+          disabled={loading}
+        >
           <Ionicons name={"diamond-outline"} size={20} color="#00A0B0" />
-          <Text style={styles.buttonText}>Assinar o premium</Text>
+          <Text style={styles.buttonText}>{loading ? 'Processando...' : 'Assinar o premium'}</Text>
         </TouchableOpacity>
       ) : (
         <View style={[styles.button, { backgroundColor: '#24ABC2' }]}> 

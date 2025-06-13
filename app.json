@@ -63,7 +63,12 @@
           "ios_app_id": "ca-app-pub-5233713899126724~8976251551"
         }
       ],
-      "react-native-iap"
+      [
+        "react-native-iap",
+        {
+          "appleTeamId": "S3RDH669C7"
+        }
+      ]
     ],
     "extra": {
       "eas": {

@@ -639,7 +639,7 @@ export default function Player() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0CC0DF", padding: 20 },
+  container: { flex: 1, backgroundColor: "#0CC0DF", paddingHorizontal: 50, paddingTop: 20 },
   backButtonSmall: { padding: 8 },
   placeholder: { width: 40 },
   contentContainer: { flex: 1, alignItems: 'flex-start', gap: 30 },
