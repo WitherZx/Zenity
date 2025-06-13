@@ -5,7 +5,7 @@ import { PlayerProvider } from './src/contexts/PlayerContext';
 import Navigation from './src/navigation';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Font from 'expo-font';
-// import mobileAds, { MaxAdContentRating } from 'react-native-google-mobile-ads';
+import mobileAds, { MaxAdContentRating } from 'react-native-google-mobile-ads';
 
 // Mantenha a splash screen visível enquanto carregamos recursos
 SplashScreen.preventAutoHideAsync();
@@ -17,14 +17,14 @@ export default function App() {
     async function prepare() {
       try {
         // Inicializa o AdMob
-        // await mobileAds().initialize();
+        await mobileAds().initialize();
         
         // Configura o AdMob
-        // await mobileAds().setRequestConfiguration({
-        //   maxAdContentRating: MaxAdContentRating.PG,
-        //   tagForChildDirectedTreatment: true,
-        //   tagForUnderAgeOfConsent: true,
-        // });
+        await mobileAds().setRequestConfiguration({
+          maxAdContentRating: MaxAdContentRating.PG,
+          tagForChildDirectedTreatment: true,
+          tagForUnderAgeOfConsent: true,
+        });
 
         // Carrega as fontes
         await Font.loadAsync({

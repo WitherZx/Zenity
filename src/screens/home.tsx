@@ -5,8 +5,8 @@ import ModulesGrid from "../components/modulesGrid";
 import { useAuth } from "../contexts/AuthContext";
 import { fonts } from "../theme/fonts";
 import { supabase } from '../config/supabase';
-// import { AdBanner } from '../components/AdBanner';
-// import { BannerAdSize } from 'react-native-google-mobile-ads';
+import { AdBanner } from '../components/AdBanner';
+import { BannerAdSize } from 'react-native-google-mobile-ads';
 
 const formatUserName = (firstName?: string, lastName?: string) => {
     if (!firstName) return '';
@@ -51,13 +51,13 @@ export default function Home() {
 
     return (
         <View style={styles.container}>
-            {/* <View style={styles.adContainer}>
+            <View style={styles.adContainer}>
                 <AdBanner 
-                    size={BannerAdSize.BANNER}
+                    size={BannerAdSize.ADAPTIVE_BANNER}
                     unitId="ca-app-pub-5233713899126724/7862480433"
                     testMode={true}
                 />
-            </View> */}
+            </View>
             <View style={styles.helloContainer}>
                 <Text style={styles.helloText}>
                     Olá, <Text style={styles.helloName}>{formatUserName(userData?.first_name ?? '', userData?.last_name ?? '')}</Text>
@@ -90,7 +90,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         width: '100%',
-        height: 50, // altura padrão do banner
         overflow: 'hidden'
     },
     adText: {

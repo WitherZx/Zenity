@@ -22,7 +22,12 @@
           "audio"
         ],
         "GADApplicationIdentifier": "ca-app-pub-5233713899126724~8976251551",
-        "CFBundleIconName": "AppIcon"
+        "CFBundleIconName": "AppIcon",
+        "SKAdNetworkItems": [
+          {
+            "SKAdNetworkIdentifier": "cstr6suwn9.skadnetwork"
+          }
+        ]
       },
       "buildNumber": "1",
       "requireFullScreen": true
@@ -36,7 +41,10 @@
       },
       "permissions": [
         "android.permission.MODIFY_AUDIO_SETTINGS"
-      ]
+      ],
+      "config": {
+        "googleMobileAdsAppId": "ca-app-pub-5233713899126724~8976251551"
+      }
     },
     "web": {
       "favicon": "./assets/images/logo2.png"
@@ -47,7 +55,15 @@
         {
           "microphonePermission": false
         }
-      ]
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "android_app_id": "ca-app-pub-5233713899126724~8976251551",
+          "ios_app_id": "ca-app-pub-5233713899126724~8976251551"
+        }
+      ],
+      "react-native-iap"
     ],
     "extra": {
       "eas": {
