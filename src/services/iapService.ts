@@ -22,6 +22,8 @@ export interface PurchaseResult {
 class IAPService {
   private static instance: IAPService;
   private initialized = false;
+  private purchaseUpdateSubscription: any;
+  private purchaseErrorSubscription: any;
 
   private constructor() {}
 
@@ -40,26 +42,30 @@ class IAPService {
       this.initialized = true;
 
       // Set up purchase listener
-      RNIap.purchaseUpdatedListener(async (purchase: RNIap.ProductPurchase) => {
+      this.purchaseUpdateSubscription = RNIap.purchaseUpdatedListener(async (purchase: RNIap.ProductPurchase) => {
         if (purchase.transactionReceipt) {
           await this.handleSuccessfulPurchase(purchase);
         }
       });
 
       // Set up error listener
-      RNIap.purchaseErrorListener((error: RNIap.PurchaseError) => {
+      this.purchaseErrorSubscription = RNIap.purchaseErrorListener((error: RNIap.PurchaseError) => {
         console.error('Purchase error:', error);
       });
 
     } catch (error) {
       console.error('Failed to initialize IAP:', error);
+      this.initialized = false;
       throw error;
     }
   }
 
   async getProducts(): Promise<RNIap.Product[]> {
-    try {
+    if (!this.initialized) {
       await this.initialize();
+    }
+    
+    try {
       const products = await RNIap.getProducts({ skus: [PRODUCT_IDS.PREMIUM_WEEKLY] });
       return products;
     } catch (error) {
@@ -69,11 +75,14 @@ class IAPService {
   }
 
   async purchasePremium(): Promise<PurchaseResult> {
-    try {
+    if (!this.initialized) {
       await this.initialize();
-      
+    }
+    
+    try {
       const purchase = await RNIap.requestPurchase({
         sku: PRODUCT_IDS.PREMIUM_WEEKLY,
+        andDangerouslyFinishTransactionAutomaticallyIOS: false,
       }) as RNIap.ProductPurchase;
 
       if (purchase.transactionReceipt) {
@@ -99,7 +108,7 @@ class IAPService {
 
       // Finish the transaction
       if (Platform.OS === 'ios') {
-        await RNIap.finishTransaction({ purchase });
+        await RNIap.finishTransaction({ purchase, isConsumable: false });
       }
     } catch (error) {
       console.error('Error handling successful purchase:', error);
@@ -121,8 +130,6 @@ class IAPService {
         try {
           const receipt = await RNIap.getReceiptIOS({ forceRefresh: true });
           if (receipt) {
-            // Here you would typically verify the receipt with your backend
-            // For now, we'll just check if the receipt exists
             return true;
           }
         } catch (error) {
@@ -139,13 +146,14 @@ class IAPService {
   }
 
   async restorePurchases(): Promise<boolean> {
-    try {
+    if (!this.initialized) {
       await this.initialize();
-      
+    }
+    
+    try {
       if (Platform.OS === 'ios') {
         const purchases = await RNIap.getAvailablePurchases();
         if (purchases.length > 0) {
-          // Handle the most recent purchase
           const latestPurchase = purchases[0];
           await this.handleSuccessfulPurchase(latestPurchase);
           return true;
@@ -161,6 +169,12 @@ class IAPService {
 
   async endConnection(): Promise<void> {
     if (this.initialized) {
+      if (this.purchaseUpdateSubscription) {
+        this.purchaseUpdateSubscription.remove();
+      }
+      if (this.purchaseErrorSubscription) {
+        this.purchaseErrorSubscription.remove();
+      }
       await RNIap.endConnection();
       this.initialized = false;
     }
