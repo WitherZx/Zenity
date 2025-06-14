@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, TextInput, Image, ActivityIndicator, Alert } from 'react-native';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { LoginStackParamList } from '../../stacks/loginStack';
 import { fonts } from '../../theme/fonts';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../../config/supabase';
+import { useAuth } from '../../contexts/AuthContext';
+import PageModel2 from '../../components/pageModel2';
 
 type NavigationProp = StackNavigationProp<LoginStackParamList>;
 
@@ -15,162 +16,106 @@ type FormData = {
 };
 
 export default function Login() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const navigation = useNavigation<NavigationProp>();
-
-  const [formData, setFormData] = useState<FormData>({
+  const { signIn, loading: authLoading } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
+  const isMountedRef = React.useRef(true);
 
-  const isFormValid = () => {
-    return formData.email.trim() !== '' && formData.password.trim() !== '';
-  };
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
-  const handleChange = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleSubmit = async () => {
-    if (!isFormValid()) return;
-    setLoading(true);
-    try {
-      const { user, session, error } = await supabase.auth.signIn({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          Alert.alert('Conta não encontrada', 'Este email não está cadastrado. Crie uma conta antes de tentar fazer login.');
-        } else if (error.message.includes('Email not confirmed')) {
-          Alert.alert('Email não verificado', 'Por favor, verifique seu email antes de fazer login.');
-        } else {
-        Alert.alert('Erro', error.message || 'Erro ao fazer login.');
-        }
-        return;
-      }
-
-      if (user) {
-        // Verifica se o email foi confirmado
-        if (!user.email_confirmed_at) {
-          Alert.alert(
-            'Email não verificado',
-            'Por favor, verifique seu email antes de fazer login. Verifique sua caixa de entrada e spam.',
-            [{ text: 'OK' }]
-          );
-          return;
-        }
-
-        // Verifica se existe registro na tabela users
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (userError && userError.code !== 'PGRST116') {
-          // PGRST116 = 0 rows, ou seja, perfil não existe ainda
-          console.error('Erro ao buscar dados do usuário:', userError);
-          Alert.alert(
-            'Erro',
-            'Não foi possível encontrar seu perfil. Por favor, entre em contato com o suporte.',
-            [{ text: 'OK' }]
-          );
-          return;
-        }
-
-        if (!userData) {
-          // Cria o perfil se não existir
-          const firstName = user.user_metadata?.first_name || '';
-          const lastName = user.user_metadata?.last_name || '';
-          const { error: insertError } = await supabase
-            .from('users')
-            .insert({
-              id: user.id,
-              first_name: firstName,
-              last_name: lastName,
-              is_premium: false,
-              profile_url: 'https://cueqhaexkoojemvewdki.supabase.co/storage/v1/object/public/user-images//defaultUser.png',
-            });
-          if (insertError) {
-            console.error('Erro ao criar perfil do usuário:', insertError);
-            Alert.alert('Erro', 'Erro ao criar perfil do usuário. Por favor, tente novamente.');
-            return;
-          }
-        }
-      }
-    } catch (error: any) {
-      console.error('Erro durante o login:', error);
-      Alert.alert('Erro', 'Ocorreu um erro durante o login. Por favor, tente novamente.');
-    } finally {
-      setLoading(false);
+  const handleChange = (field: keyof typeof formData, value: string) => {
+    if (isMountedRef.current) {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
     }
   };
 
-  return (
-    <View style={Styles.container}>
-      <Image source={require('../../../assets/images/logo2.png')} style={Styles.logo} />
-      <Text style={Styles.title}>Bem-vindo de volta!</Text>
-      <View style={Styles.form}>
-        <TextInput 
-          placeholder="Email" 
-          style={Styles.input}
-          placeholderTextColor="#91D2DE"
-          value={formData.email}
-          onChangeText={(value) => handleChange('email', value)}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          editable={!loading}
-        />
+  const handleSubmit = async () => {
+    if (!formData.email.trim() || !formData.password.trim()) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos.');
+      return;
+    }
 
-        <View style={Styles.passwordContainer}>
-          <TextInput 
-            placeholder="Senha" 
-            style={[Styles.input, { paddingRight: 50 }]}
-            placeholderTextColor="#91D2DE"
-            secureTextEntry={!showPassword}
-            value={formData.password}
-            onChangeText={(value) => handleChange('password', value)}
-            editable={!loading}
-          />
+    if (isMountedRef.current) setLoading(true);
+    try {
+      const { error } = await signIn(formData.email.trim(), formData.password.trim());
+      if (error) throw error;
+    } catch (error: any) {
+      Alert.alert('Erro', error.message || 'Não foi possível fazer login. Tente novamente.');
+    } finally {
+      if (isMountedRef.current) setLoading(false);
+    }
+  };
+
+  if (authLoading) {
+    return (
+      <View style={Styles.container}>
+        <ActivityIndicator size="large" color="#0097B2" />
+      </View>
+    );
+  }
+
+  return (
+    <PageModel2 
+      icon="log-in-outline" 
+      title="login" 
+      subtitle="Entre com sua conta"
+    >
+      <View style={Styles.container}>
+        <View style={Styles.form}>
+          <View style={Styles.formItem}>
+            <Text style={Styles.label}>Email</Text>
+            <TextInput 
+              placeholder="Email" 
+              style={Styles.input}
+              value={formData.email}
+              onChangeText={(value) => handleChange('email', value)}
+              editable={!loading}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </View>
+          <View style={Styles.formItem}>
+            <Text style={Styles.label}>Senha</Text>
+            <TextInput 
+              placeholder="Senha" 
+              style={Styles.input}
+              value={formData.password}
+              onChangeText={(value) => handleChange('password', value)}
+              editable={!loading}
+              secureTextEntry
+            />
+          </View>
+          <View style={Styles.buttonContainer}>
+            <TouchableOpacity 
+              style={[Styles.button, loading && Styles.buttonDisabled]} 
+              onPress={handleSubmit}
+              disabled={loading}
+            >
+              <Text style={Styles.buttonText}>Entrar</Text>
+            </TouchableOpacity>
+          </View>
           <TouchableOpacity 
-            style={Styles.eyeButton}
-            onPress={() => setShowPassword(!showPassword)}
+            style={Styles.linkContainer}
+            onPress={() => navigation.navigate('SignUp')}
             disabled={loading}
           >
-            <Ionicons 
-              name={showPassword ? "eye-off" : "eye"} 
-              size={24} 
-              color="#fff" 
-            />
+            <Text style={Styles.linkText}>Não tem uma conta? Cadastre-se</Text>
           </TouchableOpacity>
         </View>
       </View>
-
-      <View style={Styles.buttonContainer}>
-        <TouchableOpacity 
-          style={[Styles.button, (!isFormValid() || loading) && Styles.buttonDisabled]}
-          onPress={handleSubmit}
-          disabled={!isFormValid() || loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#0097B2" />
-          ) : (
-            <Text style={[Styles.buttonText, !isFormValid() && Styles.buttonTextDisabled]}>
-              Entrar
-            </Text>
-          )}
-        </TouchableOpacity>
-        <Text style={Styles.text}>
-          Não tem uma conta? <Text style={Styles.textBold} onPress={() => navigation.navigate('SignUp')}>Crie agora</Text>
-        </Text>
-      </View>
-    </View>
+    </PageModel2>
   );
 }
 
@@ -247,5 +192,20 @@ const Styles = StyleSheet.create({
     right: 15,
     top: '50%',
     transform: [{ translateY: -12 }],
+  },
+  formItem: {
+    width: '100%',
+  },
+  label: {
+    color: '#fff',
+    fontFamily: fonts.regular,
+  },
+  linkContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  linkText: {
+    color: '#fff',
+    fontFamily: fonts.regular,
   },
 });

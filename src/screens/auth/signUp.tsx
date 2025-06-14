@@ -196,10 +196,7 @@ const Styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0097B2',
-    padding: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 20,
+    padding: 20,
   },
   logo: {
     width: 100,
@@ -212,55 +209,50 @@ const Styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
   },
-  input: {
-    width: '100%',
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#fff',
-    borderRadius: 50,
-    backgroundColor: '#0097B2',
-    color: '#fff',
-    fontFamily: fonts.regular,
-  },
   form: {
-    width: '100%',
-    gap: 10,
+    flex: 1,
+    justifyContent: 'center',
+    gap: 20,
   },
-  text: {
+  formItem: {
+    width: '100%',
+  },
+  label: {
     color: '#fff',
     fontFamily: fonts.regular,
+    marginBottom: 5,
+  },
+  input: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 15,
+    width: '100%',
+    fontFamily: fonts.regular,
+  },
+  buttonContainer: {
+    width: '100%',
+    marginTop: 20,
   },
   button: {
     backgroundColor: '#fff',
+    borderRadius: 8,
     padding: 15,
-    borderRadius: 50,
-    width: '100%',
     alignItems: 'center',
   },
   buttonDisabled: {
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    opacity: 0.5,
   },
   buttonText: {
     color: '#0097B2',
     fontFamily: fonts.bold,
+    fontSize: 16,
   },
   buttonTextDisabled: {
     color: 'rgba(0, 151, 178, 0.5)',
   },
-  buttonContainer: {
-    width: '100%',
-    gap: 10,
-    alignItems: 'center',
-  },
-  passwordContainer: {
-    width: '100%',
-    position: 'relative',
-  },
-  eyeButton: {
-    position: 'absolute',
-    right: 15,
-    top: '50%',
-    transform: [{ translateY: -12 }],
+  text: {
+    color: '#fff',
+    fontFamily: fonts.regular,
   },
   textBold: {
     fontFamily: fonts.bold,
@@ -278,5 +270,24 @@ const Styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'column',
     gap: 10,
+  },
+  passwordContainer: {
+    width: '100%',
+    position: 'relative',
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: 15,
+    top: '50%',
+    transform: [{ translateY: -12 }],
+  },
+  linkContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  linkText: {
+    color: '#fff',
+    fontFamily: fonts.regular,
   },
 }); 

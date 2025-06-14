@@ -29,7 +29,7 @@ export const AdBanner: React.FC<AdBannerProps> = ({
       />
       {testMode && (
         <View style={styles.testModeBadge}>
-          <Text style={styles.testModeText}>Modo de Teste</Text>
+        <Text style={styles.testModeText}>Modo de Teste</Text>
         </View>
       )}
     </View>

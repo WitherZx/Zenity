@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, Alert, ActivityIndicator, Linking } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AccountStackParamList } from '../../stacks/accountStack';
@@ -23,7 +23,7 @@ type FormData = {
 export default function EditAccount() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
-  const { user: authUser } = useAuth();
+  const { user: authUser, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [imageHover, setImageHover] = useState(false);
   const [userImage, setUserImage] = useState<string | null>(null);
@@ -34,24 +34,45 @@ export default function EditAccount() {
   });
   const [userData, setUserData] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const isMountedRef = React.useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     async function fetchProfile() {
-      if (authUser?.id) {
-        const { data } = await supabase
+      if (!authUser?.id) {
+        if (isMountedRef.current) setProfileLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
           .from('users')
           .select('*')
           .eq('id', authUser.id)
           .single();
-        setUserData(data);
-        setUserImage(data?.profile_url ?? null);
-        setFormData({
-          firstName: data?.first_name ?? '',
-          lastName: data?.last_name ?? '',
-          email: authUser.email ?? '',
-        });
+
+        if (error) throw error;
+
+        if (isMountedRef.current) {
+          setUserData(data);
+          setUserImage(data?.profile_url ?? null);
+          setFormData({
+            firstName: data?.first_name ?? '',
+            lastName: data?.last_name ?? '',
+            email: authUser.email ?? '',
+          });
+          setProfileLoading(false);
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        if (isMountedRef.current) setProfileLoading(false);
       }
-      setProfileLoading(false);
     }
     fetchProfile();
   }, [authUser]);
@@ -64,112 +85,142 @@ export default function EditAccount() {
   };
 
   const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permissão necessária', 'Precisamos de permissão para acessar suas fotos.');
+    if (!authUser) {
+      Alert.alert('Erro', 'Usuário não autenticado.');
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-    if (!result.canceled) {
-      setLoading(true);
-      try {
-        console.log('Iniciando seleção de imagem');
+
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permissão necessária',
+          'Precisamos de permissão para acessar suas fotos para atualizar seu perfil.',
+          [
+            { text: 'Cancelar', style: 'cancel' },
+            { 
+              text: 'Configurações',
+              onPress: () => Linking.openSettings()
+            }
+          ]
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+        base64: true,
+      });
+
+      if (!result.canceled) {
+        setLoading(true);
         const fileUri = result.assets[0].uri;
-        console.log('fileUri:', fileUri);
         const fileName = `${authUser.id}_${Date.now()}.jpg`;
         const fileType = 'image/jpeg';
-        console.log('Lendo arquivo como base64...');
-        const base64 = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.Base64 });
-        console.log('Base64 lido, tamanho:', base64.length);
-        console.log('Iniciando upload para Supabase Storage...');
+        
+        // Verifica o tamanho do arquivo
+        const fileInfo = await FileSystem.getInfoAsync(fileUri);
+        if (fileInfo.exists && fileInfo.size && fileInfo.size > 5 * 1024 * 1024) { // 5MB
+          Alert.alert('Erro', 'A imagem é muito grande. Por favor, escolha uma imagem menor que 5MB.');
+          return;
+        }
+
+        // Usa o base64 diretamente do resultado do ImagePicker
+        const base64 = result.assets[0].base64;
+        if (!base64) {
+          throw new Error('Não foi possível processar a imagem.');
+        }
+
+        // Upload para o Supabase Storage
         const { error: uploadError } = await supabase.storage
           .from('user-images')
           .upload(fileName, base64, {
             contentType: fileType,
             upsert: true,
           });
-        if (uploadError) {
-          console.log('Erro no upload:', uploadError);
-          throw uploadError;
-        }
-        console.log('Upload realizado com sucesso! Gerando publicUrl...');
+
+        if (uploadError) throw uploadError;
+
+        // Obtém a URL pública
         const { data: publicUrlData, error: publicUrlError } = supabase.storage
           .from('user-images')
           .getPublicUrl(fileName);
-        if (publicUrlError) {
-          console.log('Erro ao gerar publicUrl:', publicUrlError);
-          throw publicUrlError;
-        }
+
+        if (publicUrlError) throw publicUrlError;
+
         const publicUrl = publicUrlData?.publicURL ?? '';
-        console.log('profile_url:', publicUrl);
-        const { data: userExists, error: userExistsError } = await supabase
-          .from('users')
-          .select('id')
-          .eq('id', authUser.id)
-          .single();
-        if (userExistsError) {
-          console.log('Erro ao buscar usuário:', userExistsError);
-        }
-        if (!userExists) {
-          Alert.alert('Erro', 'Usuário não encontrado na tabela users.');
-          return;
-        }
-        console.log('Fazendo update do profile_url...');
-        const { data, error } = await supabase
+        
+        // Atualiza o perfil do usuário
+        const { error: updateError } = await supabase
           .from('users')
           .update({ profile_url: publicUrl })
           .eq('id', authUser.id);
-        console.log('Update result:', data, error);
-        if (error) throw error;
-        setUserImage(publicUrl);
-        Alert.alert('Sucesso', 'Foto de perfil atualizada!');
-      } catch (error: any) {
-        Alert.alert('Erro', error.message);
-      } finally {
-        setLoading(false);
+
+        if (updateError) throw updateError;
+
+        if (isMountedRef.current) {
+          setUserImage(publicUrl);
+          Alert.alert('Sucesso', 'Foto de perfil atualizada com sucesso!');
+        }
       }
+    } catch (error: any) {
+      console.error('Erro ao atualizar foto:', error);
+      Alert.alert(
+        'Erro',
+        error.message || 'Não foi possível atualizar a foto. Por favor, tente novamente.'
+      );
+    } finally {
+      if (isMountedRef.current) setLoading(false);
     }
   };
 
   const handleSubmit = async () => {
-    if (!authUser) return;
+    if (!authUser) {
+      Alert.alert('Erro', 'Usuário não autenticado.');
+      return;
+    }
+
     if (!formData.firstName.trim() || !formData.lastName.trim()) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos.');
       return;
     }
+
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('users')
         .update({
           first_name: formData.firstName.trim(),
           last_name: formData.lastName.trim()
         })
-        .eq('id', authUser.id)
-        .select();
+        .eq('id', authUser.id);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       Alert.alert('Sucesso', 'Dados atualizados com sucesso!');
       navigation.goBack();
     } catch (error: any) {
       Alert.alert('Erro', 'Não foi possível atualizar os dados. Tente novamente.');
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) setLoading(false);
     }
   };
 
-  if (profileLoading) {
+  if (authLoading || profileLoading) {
     return (
       <View style={Styles.container}>
-        <Text style={Styles.label}>Carregando...</Text>
+        <ActivityIndicator size="large" color="#0097B2" />
+      </View>
+    );
+  }
+
+  if (!authUser) {
+    return (
+      <View style={Styles.container}>
+        <Text style={Styles.label}>Usuário não autenticado</Text>
       </View>
     );
   }

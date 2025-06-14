@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Ionicons as Icon } from '@expo/vector-icons';
 import ModulesGrid from "../components/modulesGrid";
 import { useAuth } from "../contexts/AuthContext";
@@ -22,29 +22,58 @@ const formatUserName = (firstName?: string, lastName?: string) => {
 };
 
 export default function Home() {
-    const { user: authUser } = useAuth();
+    const { user: authUser, loading: authLoading } = useAuth();
     const [userData, setUserData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const isMountedRef = React.useRef(true);
+
+    useEffect(() => {
+        isMountedRef.current = true;
+        return () => {
+            isMountedRef.current = false;
+        };
+    }, []);
 
     useEffect(() => {
         async function fetchProfile() {
-            if (authUser?.id) {
-                const { data } = await supabase
+            if (!authUser?.id) {
+                if (isMountedRef.current) setLoading(false);
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
                     .from('users')
                     .select('*')
                     .eq('id', authUser.id)
                     .single();
-                setUserData(data);
+
+                if (error) throw error;
+
+                if (isMountedRef.current) {
+                    setUserData(data);
+                    setLoading(false);
+                }
+            } catch (error) {
+                console.error('Error fetching profile:', error);
+                if (isMountedRef.current) setLoading(false);
             }
-            setLoading(false);
         }
         fetchProfile();
     }, [authUser]);
 
-    if (loading || !userData) {
+    if (authLoading || loading) {
         return (
             <View style={styles.container}>
-                <Text style={styles.adText}>Carregando...</Text>
+                <ActivityIndicator size="large" color="#0097B2" />
+            </View>
+        );
+    }
+
+    if (!authUser || !userData) {
+        return (
+            <View style={styles.container}>
+                <Text style={styles.adText}>Usuário não autenticado</Text>
             </View>
         );
     }
@@ -60,9 +89,9 @@ export default function Home() {
             </View>
             <View style={styles.helloContainer}>
                 <Text style={styles.helloText}>
-                    Olá, <Text style={styles.helloName}>{formatUserName(userData?.first_name ?? '', userData?.last_name ?? '')}</Text>
+                    Olá, <Text style={styles.helloName}>{formatUserName(userData.first_name ?? '', userData.last_name ?? '')}</Text>
                 </Text>
-                {userData?.is_premium ? (
+                {userData.is_premium ? (
                     <Icon name="diamond" color={'#fff'} size={20}/>
                 ) : (
                     <TouchableOpacity>
@@ -73,7 +102,7 @@ export default function Home() {
             <Text style={styles.title}>Módulos</Text>
             <ModulesGrid/>
         </View>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
