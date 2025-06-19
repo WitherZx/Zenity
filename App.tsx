@@ -6,6 +6,7 @@ import Navigation from './src/navigation';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Font from 'expo-font';
 import mobileAds, { MaxAdContentRating } from 'react-native-google-mobile-ads';
+import RevenueCatService from './src/services/revenueCatService';
 
 // Mantenha a splash screen visível enquanto carregamos recursos
 SplashScreen.preventAutoHideAsync();
@@ -16,15 +17,31 @@ export default function App() {
   useEffect(() => {
     async function prepare() {
       try {
-        // Inicializa o AdMob
-        await mobileAds().initialize();
-        
-        // Configura o AdMob
-        await mobileAds().setRequestConfiguration({
-          maxAdContentRating: MaxAdContentRating.PG,
-          tagForChildDirectedTreatment: true,
-          tagForUnderAgeOfConsent: true,
-        });
+        // Inicializa o AdMob com tratamento de erro
+        try {
+          await mobileAds().initialize();
+          
+          // Configura o AdMob
+          await mobileAds().setRequestConfiguration({
+            maxAdContentRating: MaxAdContentRating.PG,
+            tagForChildDirectedTreatment: true,
+            tagForUnderAgeOfConsent: true,
+          });
+          console.log('AdMob initialized successfully');
+        } catch (adError) {
+          console.error('Failed to initialize AdMob:', adError);
+          // Não falha o app se o AdMob não inicializar
+        }
+
+        // Inicializa o RevenueCat com tratamento de erro
+        try {
+          const revenueCatService = RevenueCatService.getInstance();
+          await revenueCatService.initialize();
+          console.log('RevenueCat initialized successfully');
+        } catch (rcError) {
+          console.error('Failed to initialize RevenueCat:', rcError);
+          // Não falha o app se o RevenueCat não inicializar
+        }
 
         // Carrega as fontes
         await Font.loadAsync({
@@ -47,9 +64,13 @@ export default function App() {
           'Montserrat-ExtraBoldItalic': require('./assets/fonts/Montserrat-ExtraBoldItalic.ttf'),
           'Montserrat-BlackItalic': require('./assets/fonts/Montserrat-BlackItalic.ttf'),
         });
+        console.log('Fonts loaded successfully');
+      } catch (error) {
+        console.error('Error during app preparation:', error);
+        // Mesmo com erro, marca o app como pronto para não travar
       } finally {
         setAppIsReady(true);
-        SplashScreen.hideAsync();
+        await SplashScreen.hideAsync();
       }
     }
     prepare();

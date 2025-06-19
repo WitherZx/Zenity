@@ -89,11 +89,12 @@ android {
 
     namespace 'com.zenity.app'
     defaultConfig {
+missingDimensionStrategy "store", "play"
         applicationId 'com.zenity.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 3
-        versionName "1.0.3"
+        versionCode 9
+        versionName "1.0.10"
     }
     signingConfigs {
         debug {

@@ -506,7 +506,7 @@ function LoadingBar() {
 
   return (
     <View style={{
-      width: '80%',
+      width: '100%',
       height: 6,
       backgroundColor: 'rgba(255,255,255,0.3)',
       borderRadius: 3,
@@ -515,7 +515,7 @@ function LoadingBar() {
     }}>
       <Animated.View style={{
         height: 6,
-        width,
+        width: '100%',
         backgroundColor: '#fff',
         borderRadius: 3,
       }} />

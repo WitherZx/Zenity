@@ -1,6 +1,6 @@
 {
   "name": "zenity",
-  "version": "1.0.0",
+  "version": "1.0.10",
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
@@ -31,6 +31,7 @@
     "react-native-gesture-handler": "~2.24.0",
     "react-native-google-mobile-ads": "^15.4.0",
     "react-native-iap": "^12.16.2",
+    "react-native-purchases": "^8.11.5",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.10.0",
     "react-native-vector-icons": "^10.2.0"
@@ -39,6 +40,7 @@
     "@babel/core": "^7.27.1",
     "@babel/preset-react": "^7.27.1",
     "@types/react": "~19.0.10",
+    "@types/react-native-vector-icons": "^6.4.18",
     "typescript": "^5.8.3"
   },
   "private": true

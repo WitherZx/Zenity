@@ -64,6 +64,11 @@ export default function EditAccount() {
   };
 
   const pickImage = async () => {
+    if (!authUser) {
+      Alert.alert('Erro', 'Usuário não autenticado.');
+      return;
+    }
+
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Permissão necessária', 'Precisamos de permissão para acessar suas fotos.');

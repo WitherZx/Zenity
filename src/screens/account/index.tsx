@@ -57,10 +57,6 @@ const MyAccount: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
   const { user: authUser, signOut } = useAuth();
-  if (!authUser) {
-    console.log('MyAccount: sem authUser, retornando null');
-    return null;
-  }
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -75,22 +71,42 @@ const MyAccount: React.FC = () => {
 
   const fetchProfile = useCallback(async () => {
     if (!authUser?.id) {
-      if (isMountedRef.current) setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+        setUserData(null);
+      }
       return;
     }
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', authUser.id)
         .single();
-      if (isMountedRef.current) setUserData(data);
-      console.log('fetchProfile: setUserData', data);
+      
+      if (error) {
+        console.error('fetchProfile: erro na consulta', error);
+        if (isMountedRef.current) {
+          setUserData(null);
+          setLoading(false);
+        }
+        return;
+      }
+      
+      if (isMountedRef.current) {
+        setUserData(data);
+        console.log('fetchProfile: setUserData', data);
+      }
     } catch (error) {
       console.error('fetchProfile: erro', error);
+      if (isMountedRef.current) {
+        setUserData(null);
+      }
     } finally {
-      if (isMountedRef.current) setLoading(false);
-      console.log('fetchProfile: setLoading(false)');
+      if (isMountedRef.current) {
+        setLoading(false);
+        console.log('fetchProfile: setLoading(false)');
+      }
     }
   }, [authUser?.id]);
 
@@ -103,8 +119,10 @@ const MyAccount: React.FC = () => {
   useEffect(() => {
     if (!authUser) {
       console.log('useEffect[authUser]: deslogou, limpando userData e loading');
-      if (isMountedRef.current) setUserData(null);
-      if (isMountedRef.current) setLoading(false);
+      if (isMountedRef.current) {
+        setUserData(null);
+        setLoading(false);
+      }
     }
   }, [authUser]);
 
@@ -118,10 +136,18 @@ const MyAccount: React.FC = () => {
     return unsubscribe;
   }, [navigation, authUser?.id, fetchProfile]);
 
+  // Se não há usuário autenticado, mostra loading
+  if (!authUser) {
+    console.log('MyAccount: sem authUser, renderizando AccountSkeleton');
+    return <AccountSkeleton />;
+  }
+
+  // Se está carregando ou não há dados do usuário, mostra skeleton
   if (loading || !userData) {
     console.log('MyAccount: loading ou !userData, renderizando AccountSkeleton');
     return <AccountSkeleton />;
   }
+  
   console.log('MyAccount: renderizando dados do usuário', userData);
 
   return (
