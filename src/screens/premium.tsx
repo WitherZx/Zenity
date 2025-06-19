@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import PageModel2 from "../components/pageModel2";
 import { useAuth } from '../contexts/AuthContext';
@@ -102,13 +102,22 @@ export default function Premium() {
     }
   };
 
+  function PremiumSkeleton() {
+    return (
+      <View style={styles.card}>
+        <View style={[styles.skeleton, { width: 120, height: 28, marginBottom: 5 }]} />
+        <View style={[styles.skeleton, { width: 80, height: 18, marginBottom: 10 }]} />
+        <View style={styles.divider} />
+        <View style={[styles.skeleton, { width: 140, height: 16, marginBottom: 5 }]} />
+        <View style={[styles.skeleton, { width: 180, height: 16 }]} />
+      </View>
+    );
+  }
+
   if (loading) {
     return (
       <PageModel2 icon="diamond-outline" title="Plano Premium" subtitle="Assinatura">
-        <View style={styles.card}>
-          <ActivityIndicator size="large" color="#00A0B0" />
-          <Text style={styles.cardTitle}>Carregando planos...</Text>
-        </View>
+        <PremiumSkeleton />
       </PageModel2>
     );
   }
@@ -209,5 +218,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#fff',
     textDecorationLine: 'underline',
+  },
+  skeleton: {
+    backgroundColor: "#e0e0e0",
+    borderRadius: 8,
   },
 });
