@@ -84,6 +84,19 @@ export default function Login() {
           return;
         }
 
+        // Verifica se a conta foi deletada
+        if (userData && userData.first_name === 'Conta Deletada') {
+          console.log('Tentativa de login com conta deletada:', user.id);
+          Alert.alert(
+            'Conta Deletada',
+            'Esta conta foi deletada e não pode mais ser acessada.',
+            [{ text: 'OK' }]
+          );
+          // Faz logout para limpar a sessão
+          await supabase.auth.signOut();
+          return;
+        }
+
         if (!userData) {
           // Cria o perfil se não existir
           const firstName = user.user_metadata?.first_name || '';
