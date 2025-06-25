@@ -234,6 +234,11 @@ const MyAccount: React.FC = () => {
       </View>
       <View>
         <CustomButton 
+          text="Assinar Premium" 
+          iconName="diamond" 
+          onPress={() => navigation.navigate('Premium')} 
+        />
+        <CustomButton 
           text="Editar dados" 
           iconName="user" 
           onPress={() => navigation.navigate('EditAccount', { currentUserData: userData })} 

@@ -71,6 +71,7 @@ export default function TabsNav() {
       >
         <Tabs.Screen name="Inicio" component={HomeStack} />
         <Tabs.Screen name="Minha Conta" component={AccountStack} />
+        <Tabs.Screen name="Premium" component={require('../stacks/premiumStack').default} />
         <Tabs.Screen name="Busca" component={SearchStack} />
       </Tabs.Navigator>
       <FloatingPlayer />
