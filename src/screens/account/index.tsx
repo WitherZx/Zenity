@@ -238,13 +238,6 @@ const MyAccount: React.FC = () => {
           iconName="user" 
           onPress={() => navigation.navigate('EditAccount', { currentUserData: userData })} 
         />
-        {!userData?.is_premium && (
-          <CustomButton 
-            text="Assinar Premium" 
-            iconName="diamond" 
-            onPress={() => navigation.navigate('Premium')} 
-          />
-        )}
         <CustomButton 
           text="Sair/Trocar de conta" 
           iconName="sign-out" 

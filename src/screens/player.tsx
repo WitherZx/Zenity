@@ -555,7 +555,7 @@ export default function Player() {
 
   if (!moduleId || !contentId) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#0CC0DF" }}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Erro: Parâmetros incompletos</Text>
           <Text style={styles.errorSubtext}>moduleId: {moduleId || "não fornecido"}</Text>
@@ -572,7 +572,7 @@ export default function Player() {
 
   if (!module) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#0CC0DF" }}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Erro: Módulo não encontrado</Text>
           <Text style={styles.errorSubtext}>ID procurado: {moduleId}</Text>
@@ -588,7 +588,7 @@ export default function Player() {
 
   if (!content) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#0CC0DF" }}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Erro: Conteúdo não encontrado</Text>
           <Text style={styles.errorSubtext}>Módulo: {module.name}</Text>
@@ -613,25 +613,27 @@ export default function Player() {
   const initialIndex = audioQueue.findIndex((item: any) => String(item.id) === String(contentId));
 
   return (
-    <SafeAreaView style={styles.container}>
-      <TouchableOpacity style={styles.backButtonSmall} onPress={() => navigation.goBack()}>
-        <Ionicons name="chevron-down-outline" size={40} color="#fff" />
-      </TouchableOpacity>
-      
-      <View style={styles.contentContainer}>
-        <Image source={content.image} style={styles.contentImage} resizeMode="cover" />
-        <View>
-          <Text style={styles.title}>{content.name}</Text>
-          <Text style={styles.moduleTitle}>{module.name}</Text>        
-        </View>
-        <View style={styles.playerContainer}>
-          <EnhancedAudioPlayer 
-            audioQueue={audioQueue}
-            initialIndex={initialIndex}
-            moduleTitle={module.name}
-            onNavigateToContent={(contentId) => {navigation.navigate('Player', { moduleId: moduleId, contentId: contentId});
-            }}
-          />
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#0CC0DF" }}>
+      <View style={styles.container}>
+        <TouchableOpacity style={styles.backButtonSmall} onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-down-outline" size={40} color="#fff" />
+        </TouchableOpacity>
+        
+        <View style={styles.contentContainer}>
+          <Image source={content.image} style={styles.contentImage} resizeMode="cover" />
+          <View>
+            <Text style={styles.title}>{content.name}</Text>
+            <Text style={styles.moduleTitle}>{module.name}</Text>        
+          </View>
+          <View style={styles.playerContainer}>
+            <EnhancedAudioPlayer 
+              audioQueue={audioQueue}
+              initialIndex={initialIndex}
+              moduleTitle={module.name}
+              onNavigateToContent={(contentId) => {navigation.navigate('Player', { moduleId: module.id, contentId: contentId});
+              }}
+            />
+          </View>
         </View>
       </View>
     </SafeAreaView>
@@ -639,7 +641,7 @@ export default function Player() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0CC0DF", paddingHorizontal: 50, paddingTop: 20 },
+  container: { flex: 1, padding: 20 },
   backButtonSmall: { padding: 8 },
   placeholder: { width: 40 },
   contentContainer: { flex: 1, alignItems: 'flex-start', gap: 30 },

@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Text, useWindowDimensions } from 'react-native';
+import { StyleSheet, View, Text, useWindowDimensions, Platform } from 'react-native';
 import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 
 interface AdBannerProps {
@@ -10,7 +10,9 @@ interface AdBannerProps {
 
 export const AdBanner: React.FC<AdBannerProps> = ({ 
   size = BannerAdSize.ADAPTIVE_BANNER,
-  unitId = 'ca-app-pub-5233713899126724/7862480433',
+  unitId = Platform.OS === 'ios'
+    ? 'ca-app-pub-5233713899126724/7013667699'
+    : 'ca-app-pub-5233713899126724/7862480433',
   testMode = false
 }) => {
   const adUnitId = testMode ? TestIds.BANNER : unitId;

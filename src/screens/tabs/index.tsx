@@ -4,7 +4,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import HomeStack from '../stacks/homeStack';
 import AccountStack from '../stacks/accountStack';
-import PremiumStack from '../stacks/premiumStack';
 import FloatingPlayer from '../../components/FloatingPlayer';
 import { useNavigationState } from '@react-navigation/native';
 import SearchStack from '../stacks/searchStack';
@@ -59,8 +58,6 @@ export default function TabsNav() {
               iconName = focused ? 'person' : 'person-outline';
             } else if (route.name === 'Busca') {
               iconName = focused ? 'search' : 'search-outline';
-            } else if (route.name === 'Premium') {
-              iconName = focused ? 'diamond' : 'diamond-outline';
             } else {
               iconName = 'help-circle-outline';
             }
@@ -75,7 +72,6 @@ export default function TabsNav() {
         <Tabs.Screen name="Inicio" component={HomeStack} />
         <Tabs.Screen name="Minha Conta" component={AccountStack} />
         <Tabs.Screen name="Busca" component={SearchStack} />
-        {!user?.is_premium && <Tabs.Screen name="Premium" component={PremiumStack} />}
       </Tabs.Navigator>
       <FloatingPlayer />
     </View>

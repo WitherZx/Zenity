@@ -22,8 +22,10 @@
           "audio",
           "audio"
         ],
-        "GADApplicationIdentifier": "ca-app-pub-5233713899126724~8976251551",
+        "GADApplicationIdentifier": "ca-app-pub-5233713899126724~7664404389",
         "CFBundleIconName": "AppIcon",
+        "NSPhotoLibraryUsageDescription": "Este app precisa acessar sua galeria para permitir que você escolha uma foto de perfil.",
+        "NSPhotoLibraryAddUsageDescription": "Este app precisa acessar sua galeria para salvar fotos de perfil.",
         "SKAdNetworkItems": [
           {
             "SKAdNetworkIdentifier": "cstr6suwn9.skadnetwork"
@@ -65,7 +67,7 @@
         "react-native-google-mobile-ads",
         {
           "androidAppId": "ca-app-pub-5233713899126724~8976251551",
-          "iosAppId": "ca-app-pub-5233713899126724~8976251551"
+          "iosAppId": "ca-app-pub-5233713899126724~7664404389"
         }
       ],
       "react-native-iap"

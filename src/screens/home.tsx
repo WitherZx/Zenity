@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native";
 import { Ionicons as Icon } from '@expo/vector-icons';
 import ModulesGrid from "../components/modulesGrid";
 import { useAuth } from "../contexts/AuthContext";
@@ -54,7 +54,9 @@ export default function Home() {
             <View>
                 <AdBanner 
                     size={BannerAdSize.ADAPTIVE_BANNER}
-                    unitId="ca-app-pub-5233713899126724/7862480433"
+                    unitId={Platform.OS === 'ios' 
+                      ? 'ca-app-pub-5233713899126724/7013667699' 
+                      : 'ca-app-pub-5233713899126724/7862480433'}
                     testMode={false}
                 />
             </View>

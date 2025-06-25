@@ -10,6 +10,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../config/supabase';
 import * as FileSystem from 'expo-file-system';
+import { Buffer } from 'buffer';
 
 type NavigationProp = StackNavigationProp<AccountStackParamList, 'EditAccount'>;
 type RouteProps = RouteProp<AccountStackParamList, 'EditAccount'>;
@@ -19,6 +20,14 @@ type FormData = {
   lastName: string;
   email: string;
 };
+
+const SUPABASE_URL = 'https://cueqhaexkoojemvewdki.supabase.co';
+
+// Adiciona função utilitária para converter base64 em Blob
+function base64ToBlob(base64: string, contentType = '', sliceSize = 512): Blob {
+  const byteCharacters = Buffer.from(base64, 'base64');
+  return new Blob([byteCharacters], { type: contentType });
+}
 
 export default function EditAccount() {
   const navigation = useNavigation<NavigationProp>();
@@ -69,63 +78,112 @@ export default function EditAccount() {
       return;
     }
 
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permissão necessária', 'Precisamos de permissão para acessar suas fotos.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-    if (!result.canceled) {
-      setLoading(true);
-      try {
+    try {
+      // Verifica permissão primeiro
+      const { status: existingStatus } = await ImagePicker.getMediaLibraryPermissionsAsync();
+      
+      let finalStatus = existingStatus;
+      
+      // Se não tem permissão, solicita
+      if (existingStatus !== 'granted') {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        finalStatus = status;
+      }
+      
+      // Se ainda não tem permissão após solicitar
+      if (finalStatus !== 'granted') {
+        Alert.alert(
+          'Permissão Necessária', 
+          'Para alterar sua foto de perfil, precisamos de permissão para acessar sua galeria. Você pode habilitar isso nas configurações do seu dispositivo.',
+          [
+            { text: 'Cancelar', style: 'cancel' }
+          ]
+        );
+        return;
+      }
+
+      // Agora abre o picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: 'images',
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8, // Reduzindo qualidade para melhor performance
+        allowsMultipleSelection: false,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setLoading(true);
+        
         const fileUri = result.assets[0].uri;
         const fileName = `${authUser.id}_${Date.now()}.jpg`;
         const fileType = 'image/jpeg';
-        const base64 = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.Base64 });
-        const { error: uploadError } = await supabase.storage
-          .from('user-images')
-          .upload(fileName, base64, {
-            contentType: fileType,
-            upsert: true,
-          });
-        if (uploadError) {
-          throw uploadError;
+        
+        // Obtém o token de acesso do usuário
+        const accessToken = supabase.auth.session()?.access_token || '';
+        if (!accessToken) {
+          Alert.alert('Erro', 'Não foi possível obter o token de autenticação.');
+          return;
         }
+        // Monta a URL de upload
+        const uploadUrl = `${SUPABASE_URL}/storage/v1/object/user-images/${fileName}`;
+        // Faz upload usando FileSystem.uploadAsync
+        const uploadResult = await FileSystem.uploadAsync(uploadUrl, fileUri, {
+          httpMethod: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': fileType,
+          },
+          uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+        });
+        if (uploadResult.status !== 200 && uploadResult.status !== 201) {
+          throw new Error('Falha ao fazer upload da imagem.');
+        }
+        
+        // Obtém a URL pública
         const { data: publicUrlData, error: publicUrlError } = supabase.storage
           .from('user-images')
           .getPublicUrl(fileName);
+          
         if (publicUrlError) {
           throw publicUrlError;
         }
+        
         const publicUrl = publicUrlData?.publicURL ?? '';
+        
+        // Verifica se o usuário existe
         const { data: userExists, error: userExistsError } = await supabase
           .from('users')
           .select('id')
           .eq('id', authUser.id)
           .single();
-        if (userExistsError) {
-        }
-        if (!userExists) {
+          
+        if (userExistsError || !userExists) {
           Alert.alert('Erro', 'Usuário não encontrado na tabela users.');
           return;
         }
+        
+        // Atualiza o perfil
         const { data, error } = await supabase
           .from('users')
           .update({ profile_url: publicUrl })
           .eq('id', authUser.id);
+          
         if (error) throw error;
-        setUserImage(publicUrl);
+        
+        // Força refresh da imagem adicionando query param único
+        const refreshedUrl = publicUrl ? `${publicUrl}?t=${Date.now()}` : '';
+        setUserImage(refreshedUrl);
+        setUserData((prev: any) => ({ ...prev, profile_url: refreshedUrl }));
         Alert.alert('Sucesso', 'Foto de perfil atualizada!');
-      } catch (error: any) {
-        Alert.alert('Erro', error.message);
-      } finally {
-        setLoading(false);
       }
+    } catch (error: any) {
+      console.error('Erro no pickImage:', error);
+      Alert.alert(
+        'Erro', 
+        error.message || 'Não foi possível processar a imagem. Tente novamente.'
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
