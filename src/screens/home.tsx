@@ -104,8 +104,7 @@ const styles = StyleSheet.create({
         fontFamily: fonts.regular
     },
     helloName: {
-        fontFamily: fonts.regular,
-        fontWeight: 'bold'
+        fontFamily: fonts.bold,
     },
     modulesContainer: {
         flexDirection: 'column',
