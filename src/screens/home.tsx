@@ -51,11 +51,11 @@ export default function Home() {
 
     return (
         <View style={styles.container}>
-            <View style={styles.adContainer}>
+            <View>
                 <AdBanner 
                     size={BannerAdSize.ADAPTIVE_BANNER}
                     unitId="ca-app-pub-5233713899126724/7862480433"
-                    testMode={true}
+                    testMode={false}
                 />
             </View>
             <View style={styles.helloContainer}>
@@ -84,20 +84,13 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         gap: 30
     },
-    adContainer: {
-        borderRadius: 10,
-        backgroundColor: '#24ABC2',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '100%',
-        overflow: 'hidden'
-    },
     adText: {
         color: '#fff',
         textAlign: 'center',
         fontSize: 20,
         fontFamily: fonts.regular
     },
+
     helloContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',

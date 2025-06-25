@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Image, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Image, Text, TouchableOpacity, Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { LoginStackParamList } from '../../stacks/loginStack';
@@ -23,13 +23,19 @@ export default function AuthHub() {
           <Text style={Styles.buttonText}>Continuar com email e senha</Text>
         </TouchableOpacity>
         {/*<View style={Styles.iconContainer}>
-          <Ionicons name="logo-facebook" style={Styles.icon} onPress={() => console.log('login com Facebook')}/>
-          <Ionicons name="logo-apple" style={Styles.icon} onPress={() => console.log('login com Apple')}/>
-          <Ionicons name="logo-google" style={Styles.icon} onPress={() => console.log('login com Google')}/>
+          <Ionicons name="logo-facebook" style={Styles.icon}/>
+          <Ionicons name="logo-apple" style={Styles.icon}/>
+          <Ionicons name="logo-google" style={Styles.icon}/>
         </View>*/}
         <Text style={Styles.text}>Já tem uma conta? <Text style={Styles.textBold } onPress={() => navigation.navigate('Login')}>Faça login</Text></Text>
       </View>
-      <Text style={Styles.textRodape}>Ao continuar, você aceita os <Text style={Styles.textRodapeBold}>Termos e Condições</Text> e a <Text style={Styles.textRodapeBold}>Política de Privacidade</Text> da Zenity</Text>
+      <Text style={Styles.textRodape}>
+        Ao continuar, você aceita os{' '}
+        <Text style={[Styles.textRodapeBold, {textDecorationLine: 'underline'}]} onPress={() => Linking.openURL('https://zenity.hnoapps.com/politica-de-privacidade/')}>Termos e Condições</Text>
+        {' '}e a{' '}
+        <Text style={[Styles.textRodapeBold, {textDecorationLine: 'underline'}]} onPress={() => Linking.openURL('https://zenity.hnoapps.com/politica-de-privacidade/')}>Política de Privacidade</Text>
+        {' '}da Zenity
+      </Text>
     </View>
   );
 }

@@ -88,7 +88,6 @@ const MyAccount: React.FC = () => {
         .single();
       
       if (error) {
-        console.error('fetchProfile: erro na consulta', error);
         if (isMountedRef.current) {
           setUserData(null);
           setLoading(false);
@@ -98,30 +97,25 @@ const MyAccount: React.FC = () => {
       
       if (isMountedRef.current) {
         setUserData(data);
-        console.log('fetchProfile: setUserData', data);
       }
     } catch (error) {
-      console.error('fetchProfile: erro', error);
       if (isMountedRef.current) {
         setUserData(null);
       }
     } finally {
       if (isMountedRef.current) {
         setLoading(false);
-        console.log('fetchProfile: setLoading(false)');
       }
     }
   }, [authUser?.id]);
 
   useEffect(() => {
     if (!authUser?.id) return;
-    console.log('useEffect[authUser?.id, fetchProfile]: chamando fetchProfile');
     fetchProfile();
   }, [authUser?.id, fetchProfile]);
 
   useEffect(() => {
     if (!authUser) {
-      console.log('useEffect[authUser]: deslogou, limpando userData e loading');
       if (isMountedRef.current) {
         setUserData(null);
         setLoading(false);
@@ -132,7 +126,6 @@ const MyAccount: React.FC = () => {
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       if (authUser?.id) {
-        console.log('navigation focus: chamando fetchProfile');
         fetchProfile();
       }
     });
@@ -140,8 +133,6 @@ const MyAccount: React.FC = () => {
   }, [navigation, authUser?.id, fetchProfile]);
 
   const handleDeleteAccount = () => {
-    console.log('handleDeleteAccount: Iniciando processo de deletar conta');
-    
     Alert.alert(
       'Deletar Conta',
       'Esta ação é irreversível. Todos os seus dados serão permanentemente removidos, incluindo:\n\n• Seu perfil e informações pessoais\n• Suas fotos de perfil\n• Histórico de uso do app\n• Todas as configurações salvas\n\nSe você possui uma assinatura ativa, será necessário cancelá-la antes de deletar a conta.\n\nTem certeza que deseja continuar?',
@@ -155,7 +146,6 @@ const MyAccount: React.FC = () => {
           text: 'Deletar Conta',
           style: 'destructive',
           onPress: () => {
-            console.log('handleDeleteAccount: Usuário confirmou primeira vez, abrindo modal de senha');
             setShowPasswordModal(true);
           }
         }
@@ -164,10 +154,7 @@ const MyAccount: React.FC = () => {
   };
 
   const handleConfirmDelete = async () => {
-    console.log('handleConfirmDelete: Senha fornecida, iniciando exclusão');
-    
     if (!password || password.trim() === '') {
-      console.log('handleConfirmDelete: Senha vazia');
       Alert.alert('Erro', 'Por favor, digite sua senha para confirmar.');
       return;
     }
@@ -175,12 +162,9 @@ const MyAccount: React.FC = () => {
     setDeleting(true);
     
     try {
-      console.log('handleConfirmDelete: Chamando deleteAccount...');
       const result = await deleteAccount(password);
-      console.log('handleConfirmDelete: Resultado:', result);
       
       if (result.success) {
-        console.log('handleConfirmDelete: Conta deletada com sucesso');
         setShowPasswordModal(false);
         setPassword('');
         Alert.alert(
@@ -190,18 +174,14 @@ const MyAccount: React.FC = () => {
             {
               text: 'OK',
               onPress: () => {
-                console.log('handleConfirmDelete: Usuário confirmou sucesso');
-                // O usuário já foi deslogado automaticamente
               }
             }
           ]
         );
       } else {
-        console.log('handleConfirmDelete: Erro ao deletar conta:', result.error);
         Alert.alert('Erro', result.error || 'Erro ao deletar conta');
       }
     } catch (error: any) {
-      console.error('handleConfirmDelete: Erro inesperado:', error);
       Alert.alert('Erro', 'Erro inesperado ao deletar conta');
     } finally {
       setDeleting(false);
@@ -209,24 +189,19 @@ const MyAccount: React.FC = () => {
   };
 
   const handleCancelDelete = () => {
-    console.log('handleCancelDelete: Usuário cancelou segunda confirmação');
     setShowPasswordModal(false);
     setPassword('');
   };
 
   // Se não há usuário autenticado, mostra loading
   if (!authUser) {
-    console.log('MyAccount: sem authUser, renderizando AccountSkeleton');
     return <AccountSkeleton />;
   }
 
   // Se está carregando ou não há dados do usuário, mostra skeleton
   if (loading || !userData) {
-    console.log('MyAccount: loading ou !userData, renderizando AccountSkeleton');
     return <AccountSkeleton />;
   }
-  
-  console.log('MyAccount: renderizando dados do usuário', userData);
 
   return (
     <View style={styles.container}>

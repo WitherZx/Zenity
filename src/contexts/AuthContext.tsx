@@ -35,7 +35,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         await revenueCatService.initialize(authUser.id);
       } catch (rcError) {
-        console.error('Failed to initialize RevenueCat for user:', rcError);
         // Continua sem o RevenueCat
       }
 
@@ -48,7 +47,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Verifica se a conta foi deletada
       if (data && data.first_name === 'Conta Deletada') {
-        console.log('fetchUserProfile: Conta deletada detectada, fazendo logout');
         await supabase.auth.signOut();
         setUser(null);
         setLoading(false);
@@ -61,7 +59,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const customerInfo = await revenueCatService.getCustomerInfo();
         isPremium = revenueCatService.isPremium(customerInfo);
       } catch (rcError) {
-        console.error('Failed to get customer info:', rcError);
         // Usa o status do Supabase como fallback
         isPremium = data?.is_premium || false;
       }
@@ -69,7 +66,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser({ ...authUser, ...data, is_premium: isPremium });
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching user profile:', error);
       // Em caso de erro, ainda define o usuário básico
       setUser({ ...authUser, is_premium: false });
       setLoading(false);
@@ -91,7 +87,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Atualiza o estado local
       setUser((prev: any) => ({ ...prev, is_premium: isPremium }));
     } catch (error) {
-      console.error('Error updating premium status:', error);
     }
   };
 
@@ -115,7 +110,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await revenueCatService.logout();
     } catch (error) {
-      console.error('Error logging out from RevenueCat:', error);
       // Continua mesmo se o logout do RevenueCat falhar
     }
     await supabase.auth.signOut();
@@ -147,7 +141,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         console.log('deleteAccount: Nenhuma assinatura ativa encontrada');
       } catch (rcError) {
-        console.error('deleteAccount: Erro ao verificar assinatura:', rcError);
         // Continua mesmo se não conseguir verificar
       }
 
@@ -159,8 +152,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', user.id);
 
       if (deleteUserError) {
-        console.error('deleteAccount: Erro ao deletar dados do usuário:', deleteUserError);
-        // Se falhar por RLS, continua mesmo assim
         console.log('deleteAccount: Continuando mesmo com erro na deleção de dados');
       } else {
         console.log('deleteAccount: Dados do usuário deletados com sucesso');
@@ -183,7 +174,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .remove(fileNames);
           
           if (removeError) {
-            console.error('deleteAccount: Erro ao deletar arquivos:', removeError);
           } else {
             console.log('deleteAccount: Arquivos de imagem deletados com sucesso');
           }
@@ -191,7 +181,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('deleteAccount: Nenhum arquivo de imagem encontrado');
         }
       } catch (storageError) {
-        console.error('deleteAccount: Erro ao deletar arquivos:', storageError);
         // Continua mesmo se não conseguir deletar arquivos
       }
 
@@ -205,7 +194,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (rcError.message && rcError.message.includes('anonymous')) {
           console.log('deleteAccount: Usuário já é anônimo no RevenueCat, continuando...');
         } else {
-          console.error('deleteAccount: Erro ao fazer logout do RevenueCat:', rcError);
         }
         // Continua mesmo se falhar
       }
@@ -224,12 +212,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .eq('id', user.id);
         
         if (markError) {
-          console.error('deleteAccount: Erro ao marcar conta como deletada:', markError);
         } else {
           console.log('deleteAccount: Conta marcada como deletada no banco');
         }
       } catch (authError) {
-        console.error('deleteAccount: Erro ao tentar marcar conta como deletada:', authError);
       }
 
       // 6. Fazer logout do Supabase
@@ -237,7 +223,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error: signOutError } = await supabase.auth.signOut();
       
       if (signOutError) {
-        console.error('deleteAccount: Erro ao fazer logout do Supabase:', signOutError);
       } else {
         console.log('deleteAccount: Logout do Supabase realizado');
       }

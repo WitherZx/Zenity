@@ -83,15 +83,10 @@ export default function EditAccount() {
     if (!result.canceled) {
       setLoading(true);
       try {
-        console.log('Iniciando seleção de imagem');
         const fileUri = result.assets[0].uri;
-        console.log('fileUri:', fileUri);
         const fileName = `${authUser.id}_${Date.now()}.jpg`;
         const fileType = 'image/jpeg';
-        console.log('Lendo arquivo como base64...');
         const base64 = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.Base64 });
-        console.log('Base64 lido, tamanho:', base64.length);
-        console.log('Iniciando upload para Supabase Storage...');
         const { error: uploadError } = await supabase.storage
           .from('user-images')
           .upload(fileName, base64, {
@@ -99,37 +94,30 @@ export default function EditAccount() {
             upsert: true,
           });
         if (uploadError) {
-          console.log('Erro no upload:', uploadError);
           throw uploadError;
         }
-        console.log('Upload realizado com sucesso! Gerando publicUrl...');
         const { data: publicUrlData, error: publicUrlError } = supabase.storage
           .from('user-images')
           .getPublicUrl(fileName);
         if (publicUrlError) {
-          console.log('Erro ao gerar publicUrl:', publicUrlError);
           throw publicUrlError;
         }
         const publicUrl = publicUrlData?.publicURL ?? '';
-        console.log('profile_url:', publicUrl);
         const { data: userExists, error: userExistsError } = await supabase
           .from('users')
           .select('id')
           .eq('id', authUser.id)
           .single();
         if (userExistsError) {
-          console.log('Erro ao buscar usuário:', userExistsError);
         }
         if (!userExists) {
           Alert.alert('Erro', 'Usuário não encontrado na tabela users.');
           return;
         }
-        console.log('Fazendo update do profile_url...');
         const { data, error } = await supabase
           .from('users')
           .update({ profile_url: publicUrl })
           .eq('id', authUser.id);
-        console.log('Update result:', data, error);
         if (error) throw error;
         setUserImage(publicUrl);
         Alert.alert('Sucesso', 'Foto de perfil atualizada!');

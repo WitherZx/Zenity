@@ -27,9 +27,7 @@ export default function App() {
             tagForChildDirectedTreatment: true,
             tagForUnderAgeOfConsent: true,
           });
-          console.log('AdMob initialized successfully');
         } catch (adError) {
-          console.error('Failed to initialize AdMob:', adError);
           // Não falha o app se o AdMob não inicializar
         }
 
@@ -37,9 +35,7 @@ export default function App() {
         try {
           const revenueCatService = RevenueCatService.getInstance();
           await revenueCatService.initialize();
-          console.log('RevenueCat initialized successfully');
         } catch (rcError) {
-          console.error('Failed to initialize RevenueCat:', rcError);
           // Não falha o app se o RevenueCat não inicializar
         }
 
@@ -64,9 +60,7 @@ export default function App() {
           'Montserrat-ExtraBoldItalic': require('./assets/fonts/Montserrat-ExtraBoldItalic.ttf'),
           'Montserrat-BlackItalic': require('./assets/fonts/Montserrat-BlackItalic.ttf'),
         });
-        console.log('Fonts loaded successfully');
       } catch (error) {
-        console.error('Error during app preparation:', error);
         // Mesmo com erro, marca o app como pronto para não travar
       } finally {
         setAppIsReady(true);

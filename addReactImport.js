@@ -6,7 +6,6 @@ function addReactImportToFile(filePath) {
   if (!content.includes('import React')) {
     const newContent = `import React from "react";\n${content}`;
     fs.writeFileSync(filePath, newContent, 'utf8');
-    console.log(`Adicionado import em: ${filePath}`);
   }
 }
 

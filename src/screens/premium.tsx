@@ -22,23 +22,18 @@ export default function Premium() {
     try {
       setLoading(true);
       const offering = await revenueCatService.getOfferings();
-      
       if (offering && offering.availablePackages.length > 0) {
-        // Procura pelo pacote semanal
         const weekly = offering.availablePackages.find(pkg => 
           pkg.identifier.includes('weekly') || pkg.product.identifier.includes('weekly')
         );
-        
         if (weekly) {
           setWeeklyPackage(weekly);
         } else {
-          // Se não encontrar específico, usa o primeiro
           setWeeklyPackage(offering.availablePackages[0]);
         }
       }
     } catch (error) {
-      console.error('Error loading weekly plan:', error);
-      // Não falha o app se não conseguir carregar os planos
+      // Erro ao carregar plano semanal, mas não exibe para o usuário
     } finally {
       setLoading(false);
     }
@@ -49,37 +44,25 @@ export default function Premium() {
       Alert.alert('Erro', 'Plano semanal não disponível.');
       return;
     }
-
     if (!user) {
       Alert.alert('Erro', 'Usuário não autenticado.');
       return;
     }
-
     try {
       setPurchasing(true);
-      
-      // Realiza a compra
       const customerInfo = await revenueCatService.purchasePackage(weeklyPackage);
-      
-      // Verifica se o usuário agora é premium
       const isPremium = revenueCatService.isPremium(customerInfo);
-      
       if (isPremium) {
-        // Atualiza o status no Supabase
         await updatePremiumStatus(true);
         Alert.alert('Sucesso!', 'Parabéns! Você agora é um usuário premium.');
       } else {
         Alert.alert('Erro', 'A compra foi concluída, mas o status premium não foi ativado.');
       }
     } catch (error: any) {
-      console.error('Purchase error:', error);
-      
       if (error.userCancelled) {
-        // Usuário cancelou a compra - não mostrar erro
         return;
       }
-      
-      Alert.alert('Erro na Compra', error.message || 'Ocorreu um erro durante a compra. Tente novamente.');
+      Alert.alert('Erro na Compra', error.message ? error.message : 'Ocorreu um erro durante a compra. Tente novamente.');
     } finally {
       setPurchasing(false);
     }
@@ -89,7 +72,6 @@ export default function Premium() {
     try {
       const customerInfo = await revenueCatService.restorePurchases();
       const isPremium = revenueCatService.isPremium(customerInfo);
-      
       if (isPremium) {
         await updatePremiumStatus(true);
         Alert.alert('Sucesso!', 'Suas compras foram restauradas com sucesso.');
@@ -97,7 +79,6 @@ export default function Premium() {
         Alert.alert('Nenhuma Compra Encontrada', 'Não foi encontrada nenhuma compra para restaurar.');
       }
     } catch (error) {
-      console.error('Restore error:', error);
       Alert.alert('Erro', 'Não foi possível restaurar as compras.');
     }
   };
@@ -152,7 +133,6 @@ export default function Premium() {
           <Text style={[styles.buttonText, { color: '#fff' }]}>Você já é premium</Text>
         </View>
       )}
-      
       {!user?.is_premium && (
         <TouchableOpacity style={styles.restoreButton} onPress={handleRestorePurchases}>
           <Text style={styles.restoreButtonText}>Restaurar Compras</Text>

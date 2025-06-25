@@ -75,7 +75,6 @@ export default function Login() {
 
         if (userError && userError.code !== 'PGRST116') {
           // PGRST116 = 0 rows, ou seja, perfil não existe ainda
-          console.error('Erro ao buscar dados do usuário:', userError);
           Alert.alert(
             'Erro',
             'Não foi possível encontrar seu perfil. Por favor, entre em contato com o suporte.',
@@ -86,7 +85,6 @@ export default function Login() {
 
         // Verifica se a conta foi deletada
         if (userData && userData.first_name === 'Conta Deletada') {
-          console.log('Tentativa de login com conta deletada:', user.id);
           Alert.alert(
             'Conta Deletada',
             'Esta conta foi deletada e não pode mais ser acessada.',
@@ -111,14 +109,12 @@ export default function Login() {
               profile_url: 'https://cueqhaexkoojemvewdki.supabase.co/storage/v1/object/public/user-images//defaultUser.png',
             });
           if (insertError) {
-            console.error('Erro ao criar perfil do usuário:', insertError);
             Alert.alert('Erro', 'Erro ao criar perfil do usuário. Por favor, tente novamente.');
             return;
           }
         }
       }
     } catch (error: any) {
-      console.error('Erro durante o login:', error);
       Alert.alert('Erro', 'Ocorreu um erro durante o login. Por favor, tente novamente.');
     } finally {
       setLoading(false);

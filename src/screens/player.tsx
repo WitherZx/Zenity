@@ -134,7 +134,7 @@ function EnhancedAudioPlayer({
           }));
         }
       } catch (error) {
-        console.error('Erro ao atualizar status do áudio:', error);
+        // Removido: console.error('Erro ao atualizar status do áudio:', error);
       }
     }, 1000);
 
@@ -299,7 +299,7 @@ function EnhancedAudioPlayer({
       await handleSetPosition(newPosition);
       setState(prev => ({ ...prev, position: value * state.duration }));
     } catch (error) {
-      console.error('Erro ao buscar posição:', error);
+      // Removido: console.error('Erro ao buscar posição:', error);
     }
   };
 
