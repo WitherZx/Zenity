@@ -71,8 +71,14 @@ export default function TabsNav() {
       >
         <Tabs.Screen name="Inicio" component={HomeStack} />
         <Tabs.Screen name="Minha Conta" component={AccountStack} />
-        <Tabs.Screen name="Premium" component={require('../stacks/premiumStack').default} />
         <Tabs.Screen name="Busca" component={SearchStack} />
+        <Tabs.Screen name="Premium" component={require('../stacks/premiumStack').default}
+          options={{
+            tabBarIcon: ({ focused, color }) => (
+              <Ionicons name={focused ? 'diamond' : 'diamond-outline'} size={25} color={color} />
+            ),
+          }}
+        />
       </Tabs.Navigator>
       <FloatingPlayer />
     </View>
