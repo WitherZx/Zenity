@@ -86,7 +86,7 @@ export default function EditAccount() {
       
       // Se não tem permissão, solicita
       if (existingStatus !== 'granted') {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         finalStatus = status;
       }
       
@@ -99,20 +99,20 @@ export default function EditAccount() {
             { text: 'Cancelar', style: 'cancel' }
           ]
         );
-        return;
-      }
+      return;
+    }
 
       // Agora abre o picker
-      const result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: 'images',
-        allowsEditing: true,
-        aspect: [1, 1],
+      allowsEditing: true,
+      aspect: [1, 1],
         quality: 0.8, // Reduzindo qualidade para melhor performance
         allowsMultipleSelection: false,
-      });
+    });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        setLoading(true);
+      setLoading(true);
         
         const fileUri = result.assets[0].uri;
         const fileName = `${authUser.id}_${Date.now()}.jpg`;
@@ -134,7 +134,7 @@ export default function EditAccount() {
             'Content-Type': fileType,
           },
           uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-        });
+          });
         if (uploadResult.status !== 200 && uploadResult.status !== 201) {
           throw new Error('Falha ao fazer upload da imagem.');
         }
@@ -176,14 +176,14 @@ export default function EditAccount() {
         setUserData((prev: any) => ({ ...prev, profile_url: refreshedUrl }));
         Alert.alert('Sucesso', 'Foto de perfil atualizada!');
       }
-    } catch (error: any) {
+      } catch (error: any) {
       console.error('Erro no pickImage:', error);
       Alert.alert(
         'Erro', 
         error.message || 'Não foi possível processar a imagem. Tente novamente.'
       );
-    } finally {
-      setLoading(false);
+      } finally {
+        setLoading(false);
     }
   };
 
