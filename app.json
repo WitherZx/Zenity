@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "Zenity",
-    "slug": "zenity",
-    "scheme": "zenity",
+    "name": "Zenity USA",
+    "slug": "zenity-usa",
+    "scheme": "zenity-usa",
     "main": "./src/index.js",
-    "version": "1.0.14",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/adaptive-icon.png",
     "userInterfaceStyle": "light",
@@ -16,7 +16,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.zenity.ios",
+      "bundleIdentifier": "com.zenity.usa.ios",
       "infoPlist": {
         "UIBackgroundModes": [
           "audio",
@@ -40,8 +40,8 @@
       "requireFullScreen": true
     },
     "android": {
-      "package": "com.zenity.app",
-      "versionCode": 14,
+      "package": "com.zenity.usa.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#0CC0DF"
