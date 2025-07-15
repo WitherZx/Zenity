@@ -1,0 +1,83 @@
+{
+  "expo": {
+    "name": "Zenity",
+    "slug": "zenity",
+    "scheme": "zenity",
+    "main": "./src/index.js",
+    "version": "1.0.15",
+    "orientation": "portrait",
+    "icon": "./assets/images/adaptive-icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/adaptive-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0CC0DF"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.zenity.ios",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "audio",
+          "audio"
+        ],
+        "GADApplicationIdentifier": "ca-app-pub-5233713899126724~7664404389",
+        "CFBundleIconName": "AppIcon",
+        "NSPhotoLibraryUsageDescription": "Este app precisa acessar sua galeria para permitir que você escolha uma foto de perfil.",
+        "NSPhotoLibraryAddUsageDescription": "Este app precisa acessar sua galeria para salvar fotos de perfil.",
+        "SKAdNetworkItems": [
+          {
+            "SKAdNetworkIdentifier": "cstr6suwn9.skadnetwork"
+          },
+          {
+            "SKAdNetworkIdentifier": "cstr6suwn9.skadnetwork"
+          }
+        ],
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "buildNumber": "15",
+      "requireFullScreen": true
+    },
+    "android": {
+      "package": "com.zenity.app",
+      "versionCode": 15,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#0CC0DF"
+      },
+      "permissions": [
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ],
+      "config": {
+        "googleMobileAdsAppId": "ca-app-pub-5233713899126724~8976251551"
+      }
+    },
+    "web": {
+      "favicon": "./assets/images/logo2.png"
+    },
+    "plugins": [
+      [
+        "expo-av",
+        {
+          "microphonePermission": false
+        }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-5233713899126724~8976251551",
+          "iosAppId": "ca-app-pub-5233713899126724~7664404389"
+        }
+      ],
+      "react-native-iap"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "b0f5c296-95d4-48fb-a938-8eb0e50cae23"
+      }
+    },
+    "jsEngine": "jsc",
+    "owner": "ho-apps-ltda"
+  }
+}
