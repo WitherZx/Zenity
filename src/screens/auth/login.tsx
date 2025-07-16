@@ -46,11 +46,11 @@ export default function Login() {
 
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
-          Alert.alert('Conta não encontrada', 'Este email não está cadastrado. Crie uma conta antes de tentar fazer login.');
+          Alert.alert('Account not found', 'This email is not registered. Create an account before trying to log in.');
         } else if (error.message.includes('Email not confirmed')) {
-          Alert.alert('Email não verificado', 'Por favor, verifique seu email antes de fazer login.');
+          Alert.alert('Email not verified', 'Please verify your email before logging in. Check your inbox and spam.');
         } else {
-        Alert.alert('Erro', error.message || 'Erro ao fazer login.');
+        Alert.alert('Error', error.message || 'An error occurred during login.');
         }
         return;
       }
@@ -59,8 +59,8 @@ export default function Login() {
         // Verifica se o email foi confirmado
         if (!user.email_confirmed_at) {
           Alert.alert(
-            'Email não verificado',
-            'Por favor, verifique seu email antes de fazer login. Verifique sua caixa de entrada e spam.',
+            'Email not verified',
+            'Please verify your email before logging in. Check your inbox and spam.',
             [{ text: 'OK' }]
           );
           return;
@@ -76,8 +76,8 @@ export default function Login() {
         if (userError && userError.code !== 'PGRST116') {
           // PGRST116 = 0 rows, ou seja, perfil não existe ainda
           Alert.alert(
-            'Erro',
-            'Não foi possível encontrar seu perfil. Por favor, entre em contato com o suporte.',
+            'Error',
+            'Could not find your profile. Please contact support.',
             [{ text: 'OK' }]
           );
           return;
@@ -86,8 +86,8 @@ export default function Login() {
         // Verifica se a conta foi deletada
         if (userData && userData.first_name === 'Conta Deletada') {
           Alert.alert(
-            'Conta Deletada',
-            'Esta conta foi deletada e não pode mais ser acessada.',
+            'Account Deleted',
+            'This account has been deleted and can no longer be accessed.',
             [{ text: 'OK' }]
           );
           // Faz logout para limpar a sessão
@@ -106,16 +106,16 @@ export default function Login() {
               first_name: firstName,
               last_name: lastName,
               is_premium: false,
-              profile_url: 'https://cueqhaexkoojemvewdki.supabase.co/storage/v1/object/public/user-images//defaultUser.png',
+              profile_url: 'https://ouxrcqjejncpmlaehonk.supabase.co/storage/v1/object/public/user-images//defaultUser.png',
             });
           if (insertError) {
-            Alert.alert('Erro', 'Erro ao criar perfil do usuário. Por favor, tente novamente.');
+            Alert.alert('Error', 'Error creating user profile. Please try again.');
             return;
           }
         }
       }
     } catch (error: any) {
-      Alert.alert('Erro', 'Ocorreu um erro durante o login. Por favor, tente novamente.');
+      Alert.alert('Error', 'An error occurred during login. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -124,7 +124,7 @@ export default function Login() {
   return (
     <View style={Styles.container}>
       <Image source={require('../../../assets/images/logo2.png')} style={Styles.logo} />
-      <Text style={Styles.title}>Bem-vindo de volta!</Text>
+      <Text style={Styles.title}>Welcome back!</Text>
       <View style={Styles.form}>
         <TextInput 
           placeholder="Email" 
@@ -139,7 +139,7 @@ export default function Login() {
 
         <View style={Styles.passwordContainer}>
           <TextInput 
-            placeholder="Senha" 
+            placeholder="Password" 
             style={[Styles.input, { paddingRight: 50 }]}
             placeholderTextColor="#91D2DE"
             secureTextEntry={!showPassword}
@@ -171,12 +171,12 @@ export default function Login() {
             <ActivityIndicator color="#0097B2" />
           ) : (
             <Text style={[Styles.buttonText, !isFormValid() && Styles.buttonTextDisabled]}>
-              Entrar
+              Sign in
             </Text>
           )}
         </TouchableOpacity>
         <Text style={Styles.text}>
-          Não tem uma conta? <Text style={Styles.textBold} onPress={() => navigation.navigate('SignUp')}>Crie agora</Text>
+          Don't have an account? <Text style={Styles.textBold} onPress={() => navigation.navigate('SignUp')}>Create one now</Text>
         </Text>
       </View>
     </View>

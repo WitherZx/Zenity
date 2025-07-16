@@ -87,14 +87,14 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.zenity.app'
+    namespace 'com.zenity.us.app'
     defaultConfig {
-missingDimensionStrategy "store", "play"
-        applicationId 'com.zenity.app'
+        applicationId 'com.zenity.us.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 14
-        versionName "1.0.14"
+        versionCode 5
+        versionName "1.0.4"
+        missingDimensionStrategy "store", "play"
     }
     signingConfigs {
         debug {
@@ -103,15 +103,20 @@ missingDimensionStrategy "store", "play"
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            storeFile file('release-key.keystore')
+            storePassword '29052003Kmk-'
+            keyAlias 'release-key'
+            keyPassword '29052003Kmk-'
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            // Using release keystore for production
+            signingConfig signingConfigs.release
             shrinkResources (findProperty('android.enableShrinkResourcesInReleaseBuilds')?.toBoolean() ?: false)
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"

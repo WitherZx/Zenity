@@ -1,17 +1,19 @@
+import { Linking, Alert } from 'react-native';
+
 const handleEmailSupport = () => {
   const email = 'suporte@hnospps.com';
-  const subject = 'Solicitação de Deletar Conta';
-  const body = 'Olá, gostaria de deletar minha conta no app Zenity. Por favor, me ajude com o processo.';
+  const subject = 'Account Deletion Request';
+  const body = 'Hello, I would like to delete my account in the Zenity app. Please help me with the process.';
   
   const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   
-  Linking.canOpenURL(mailtoUrl).then(supported => {
+  Linking.canOpenURL(mailtoUrl).then((supported: boolean) => {
     if (supported) {
       Linking.openURL(mailtoUrl);
     } else {
       Alert.alert(
-        'Email não disponível',
-        'Por favor, envie um email para suporte@hnospps.com com o assunto "Solicitação de Deletar Conta"'
+        'Email not available',
+        'Please send an email to suporte@hnospps.com with the subject "Account Deletion Request"'
       );
     }
   });

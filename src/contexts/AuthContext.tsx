@@ -5,189 +5,284 @@ import RevenueCatService from '../services/revenueCatService';
 
 interface AuthContextData {
   user: any;
-  userData: any;
   loading: boolean;
   signOut: () => Promise<void>;
   updatePremiumStatus: (isPremium: boolean) => Promise<void>;
-  deleteAccount: (password: string) => Promise<{ success: boolean; error?: string }>;
   refreshPremiumStatus: () => Promise<void>;
+  deleteAccount: (password: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextData>({
   user: null,
-  userData: null,
   loading: true,
   signOut: async () => {},
   updatePremiumStatus: async () => {},
-  deleteAccount: async () => ({ success: false }),
   refreshPremiumStatus: async () => {},
+  deleteAccount: async () => ({ success: false }),
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any>(null);
-  const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [revenueCatPremium, setRevenueCatPremium] = useState<boolean | null>(null);
-  const [revenueCatLoading, setRevenueCatLoading] = useState(true);
   const revenueCatService = RevenueCatService.getInstance();
 
-  // MÉTODO PARA SINCRONIZAR STATUS
-  const refreshPremiumStatus = async () => {
-    console.log('AuthContext: Starting refreshPremiumStatus...');
-    try {
-      const isAvailable = await RevenueCatService.isServiceAvailable();
-      if (isAvailable) {
-        console.log('AuthContext: RevenueCat is available, checking status...');
-        const rcStatus = await revenueCatService.checkPremiumStatus();
-        console.log('AuthContext: RevenueCat premium status:', rcStatus);
-        setRevenueCatPremium(rcStatus);
-        
-        // Sincronizar com Supabase se diferente
-        if (userData && rcStatus !== userData.is_premium) {
-          console.log('AuthContext: Syncing status with Supabase...');
-          await supabase
-            .from('users')
-            .update({ is_premium: rcStatus })
-            .eq('id', userData.id);
-          
-          setUserData((prev: any) => prev ? { ...prev, is_premium: rcStatus } : null);
-          console.log('AuthContext: Status synchronized with Supabase');
-        }
-      } else {
-        console.log('AuthContext: RevenueCat not available, keeping current status');
-        setRevenueCatPremium(null);
-      }
-    } catch (error) {
-      console.log('AuthContext: Failed to refresh premium status:', error);
-      setRevenueCatPremium(null);
-    } finally {
-      setRevenueCatLoading(false);
-    }
-  };
-
   async function fetchUserProfile(authUser: any) {
-    if (!authUser) {
-      setUser(null);
-      setUserData(null);
-      setRevenueCatPremium(null);
-      setLoading(false);
-      return;
-    }
-
+    console.log('AuthContext: fetchUserProfile iniciado', authUser ? 'com usuário' : 'sem usuário');
+    
     try {
+      if (!authUser) {
+        console.log('AuthContext: Nenhum usuário, definindo como null');
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      console.log('AuthContext: Processando usuário ID:', authUser.id);
+
       // Inicializa o RevenueCat com o ID do usuário (com tratamento de erro)
       try {
+        console.log('AuthContext: Inicializando RevenueCat...');
         await revenueCatService.initialize(authUser.id);
+        console.log('AuthContext: RevenueCat inicializado com sucesso');
       } catch (rcError) {
-        console.log('AuthContext: RevenueCat initialization failed, continuing without it');
+        console.log('AuthContext: RevenueCat falhou, continuando sem:', rcError);
       }
 
-      // Busca o perfil completo do Supabase
-      const { data } = await supabase
+      // Busca o perfil completo do Supabase com timeout
+      console.log('AuthContext: Buscando perfil no Supabase...');
+      const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', authUser.id)
         .single();
 
-      // Verifica se a conta foi deletada
-      if (data && data.first_name === 'Conta Deletada') {
-        await supabase.auth.signOut();
-        setUser(null);
-        setUserData(null);
-        setRevenueCatPremium(null);
+      if (error) {
+        console.log('AuthContext: Erro ao buscar perfil, usando dados básicos:', error);
+        setUser({ ...authUser, is_premium: false });
         setLoading(false);
         return;
       }
 
-      // Define dados do usuário primeiro
-      setUser(authUser);
-      setUserData(data);
+      console.log('AuthContext: Perfil encontrado:', data ? 'sim' : 'não');
 
+      // Verifica se a conta foi deletada
+      if (data && data.first_name === 'Conta Deletada') {
+        console.log('AuthContext: Conta deletada detectada, fazendo logout');
+        try {
+          await supabase.auth.signOut();
+        } catch (signOutError) {
+          console.log('AuthContext: Erro no logout:', signOutError);
+        }
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      // Verifica o status premium no RevenueCat (FONTE DA VERDADE)
+      let isPremium = false;
+      let shouldUpdateSupabase = false;
+      
+      // Primeiro verifica se o RevenueCat está disponível
+      if (revenueCatService.isServiceAvailable()) {
+        try {
+          console.log('AuthContext: Verificando status premium no RevenueCat...');
+          const customerInfo = await revenueCatService.getCustomerInfo();
+          isPremium = revenueCatService.isPremium(customerInfo);
+          console.log('AuthContext: Status premium do RevenueCat:', isPremium);
+          
+          // Verifica se precisa sincronizar com o Supabase
+          const supabasePremiumStatus = data?.is_premium || false;
+          if (isPremium !== supabasePremiumStatus) {
+            console.log(`AuthContext: Status dessinc! RevenueCat: ${isPremium}, Supabase: ${supabasePremiumStatus}`);
+            shouldUpdateSupabase = true;
+          }
+        } catch (rcError) {
+          console.log('AuthContext: Erro no RevenueCat, usando fallback do Supabase:', rcError);
+          isPremium = data?.is_premium || false;
+        }
+      } else {
+        console.log('AuthContext: RevenueCat não disponível, usando status do Supabase');
+        console.log('AuthContext: Motivo:', revenueCatService.getLastError());
+        isPremium = data?.is_premium || false;
+      }
+      
+      // Sincroniza o Supabase com o RevenueCat se necessário
+      if (shouldUpdateSupabase) {
+        try {
+          console.log(`AuthContext: Sincronizando Supabase: ${isPremium}`);
+          const { error: updateError } = await supabase
+            .from('users')
+            .update({ is_premium: isPremium })
+            .eq('id', authUser.id);
+          
+          if (updateError) {
+            console.log('AuthContext: Erro ao sincronizar Supabase:', updateError);
+          } else {
+            console.log('AuthContext: Supabase sincronizado com sucesso');
+            // Atualiza os dados locais também
+            data.is_premium = isPremium;
+          }
+        } catch (syncError) {
+          console.log('AuthContext: Erro ao sincronizar com Supabase:', syncError);
+        }
+      }
+
+      console.log('AuthContext: Definindo usuário final com premium:', isPremium);
+      setUser({ ...authUser, ...data, is_premium: isPremium });
       setLoading(false);
     } catch (error) {
-      // Em caso de erro, ainda define o usuário básico
-      setUser(authUser);
-      setUserData({ ...authUser, is_premium: false });
+      console.error('AuthContext: Erro geral em fetchUserProfile:', error);
+      // SEMPRE define um usuário e para o loading
+      if (authUser) {
+        setUser({ ...authUser, is_premium: false });
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     }
   }
 
-  // USEEFFECT PARA LISTENERS
-  useEffect(() => {
-    if (userData) {
-      console.log('AuthContext: Setting up RevenueCat listeners for user:', userData.id);
-      refreshPremiumStatus();
-
-      // Listener para mudanças no RevenueCat
-      const customerInfoListener = revenueCatService.addCustomerInfoUpdateListener(
-        () => {
-          console.log('AuthContext: RevenueCat customer info updated, refreshing status...');
-          refreshPremiumStatus();
-        }
-      );
-
-      // Listener para AppState
-      const appStateListener = AppState.addEventListener('change', (nextAppState) => {
-        if (nextAppState === 'active') {
-          console.log('AuthContext: App became active, refreshing premium status...');
-          refreshPremiumStatus();
-        }
-      });
-
-      return () => {
-        console.log('AuthContext: Cleaning up listeners...');
-        try {
-          if (customerInfoListener) {
-            (customerInfoListener as any)?.remove?.();
-          }
-          appStateListener?.remove();
-        } catch (error) {
-          console.log('AuthContext: Error cleaning up listeners:', error);
-        }
-      };
-    }
-  }, [userData?.id]);
-
-  // Criar userData enhanced com lógica hierárquica
-  const finalIsPremium = revenueCatPremium ?? userData?.is_premium ?? false;
-  const enhancedUserData = userData ? {
-    ...userData,
-    is_premium: finalIsPremium
-  } : null;
-
   const updatePremiumStatus = async (isPremium: boolean) => {
-    if (!userData) return;
+    if (!user) return;
 
     try {
-      console.log('AuthContext: Updating premium status to:', isPremium);
       // Atualiza o status no Supabase
       const { error } = await supabase
         .from('users')
         .update({ is_premium: isPremium })
-        .eq('id', userData.id);
+        .eq('id', user.id);
 
       if (error) throw error;
 
       // Atualiza o estado local
-      setUserData((prev: any) => ({ ...prev, is_premium: isPremium }));
-      console.log('AuthContext: Premium status updated successfully');
+      setUser((prev: any) => ({ ...prev, is_premium: isPremium }));
     } catch (error) {
-      console.error('AuthContext: Failed to update premium status:', error);
+    }
+  };
+
+  // Método para forçar verificação do status premium no RevenueCat
+  const refreshPremiumStatus = async () => {
+    if (!user?.id) return;
+
+    console.log('AuthContext: Forçando verificação do status premium...');
+    
+    if (revenueCatService.isServiceAvailable()) {
+      try {
+        const customerInfo = await revenueCatService.getCustomerInfo();
+        const isPremium = revenueCatService.isPremium(customerInfo);
+        
+        console.log('AuthContext: Status premium atual no RevenueCat:', isPremium);
+        
+        // Verifica se precisa atualizar
+        if (isPremium !== user.is_premium) {
+          console.log(`AuthContext: Atualizando status de ${user.is_premium} para ${isPremium}`);
+          
+          // Atualiza Supabase
+          const { error } = await supabase
+            .from('users')
+            .update({ is_premium: isPremium })
+            .eq('id', user.id);
+          
+          if (!error) {
+            // Atualiza estado local
+            setUser((prev: any) => ({ ...prev, is_premium: isPremium }));
+            console.log('AuthContext: Status premium atualizado com sucesso');
+          }
+        }
+      } catch (error) {
+        console.log('AuthContext: Erro ao verificar status premium:', error);
+      }
     }
   };
 
   useEffect(() => {
+    // Timeout de segurança para garantir que loading nunca trave
+    const timeoutId = setTimeout(() => {
+      console.log('AuthContext: Timeout de segurança ativado - forçando loading = false');
+      setLoading(false);
+      setUser(null);
+    }, 10000); // 10 segundos
+
+    // Listener para mudanças automáticas no RevenueCat
+    const handleCustomerInfoUpdate = async (customerInfo: any) => {
+      console.log('AuthContext: Recebeu atualização automática do RevenueCat');
+      if (user?.id) {
+        const isPremium = revenueCatService.isPremium(customerInfo);
+        console.log('AuthContext: Novo status premium:', isPremium);
+        
+        // Atualiza o Supabase com o novo status
+        try {
+          const { error } = await supabase
+            .from('users')
+            .update({ is_premium: isPremium })
+            .eq('id', user.id);
+          
+          if (!error) {
+            // Atualiza o estado do usuário
+            setUser((prevUser: any) => ({ ...prevUser, is_premium: isPremium }));
+            console.log('AuthContext: Status premium atualizado automaticamente');
+          }
+        } catch (error) {
+          console.log('AuthContext: Erro ao atualizar status automático:', error);
+        }
+      }
+    };
+
+    // Adiciona o listener
+    revenueCatService.addCustomerInfoUpdateListener(handleCustomerInfoUpdate);
+
+    // Listener para quando o app ganha foco (volta do background)
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === 'active' && user?.id) {
+        console.log('AuthContext: App ganhou foco, verificando status premium...');
+        // Aguarda um pouco para garantir que o RevenueCat sincronizou
+        setTimeout(() => {
+          refreshPremiumStatus();
+        }, 1000);
+      }
+    };
+
+    const appStateSubscription = AppState.addEventListener('change', handleAppStateChange);
+
     // Checa o usuário atual ao iniciar
-    const session = supabase.auth.session();
-    fetchUserProfile(session?.user ?? null);
+    const initializeAuth = async () => {
+      try {
+        console.log('AuthContext: Inicializando autenticação...');
+        // Para Supabase v1.x usar session() em vez de getSession()
+        const session = supabase.auth.session();
+        
+        console.log('AuthContext: Sessão obtida:', session ? 'com usuário' : 'sem usuário');
+        clearTimeout(timeoutId);
+        await fetchUserProfile(session?.user ?? null);
+      } catch (error) {
+        console.error('AuthContext: Erro crítico na inicialização:', error);
+        clearTimeout(timeoutId);
+        setUser(null);
+        setLoading(false);
+      }
+    };
+    
+    initializeAuth();
 
     // Listener para mudanças de autenticação
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      fetchUserProfile(session?.user ?? null);
-    });
+    let subscription: any = null;
+    try {
+      // Para Supabase v1.x, onAuthStateChange retorna diretamente a subscription
+      subscription = supabase.auth.onAuthStateChange((_event, session) => {
+        console.log('AuthContext: Mudança de autenticação detectada:', _event);
+        fetchUserProfile(session?.user ?? null);
+      });
+    } catch (error) {
+      console.error('AuthContext: Erro ao configurar listener:', error);
+    }
 
     return () => {
-      listener?.unsubscribe();
+      clearTimeout(timeoutId);
+      subscription?.unsubscribe();
+      // Remove o listener do RevenueCat
+      revenueCatService.removeCustomerInfoUpdateListener(handleCustomerInfoUpdate);
+      // Remove o listener do AppState
+      appStateSubscription?.remove();
     };
   }, []);
 
@@ -200,20 +295,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     await supabase.auth.signOut();
     setUser(null);
-    setUserData(null);
-    setRevenueCatPremium(null);
     setLoading(false);
   };
 
   const deleteAccount = async (password: string): Promise<{ success: boolean; error?: string }> => {
     console.log('deleteAccount: Iniciando processo de deletar conta');
     
-    if (!userData) {
+    if (!user) {
       console.log('deleteAccount: Usuário não autenticado');
       return { success: false, error: 'Usuário não autenticado' };
     }
 
-    console.log('deleteAccount: Usuário ID:', userData.id);
+    console.log('deleteAccount: Usuário ID:', user.id);
 
     try {
       // 1. Verificar se o usuário tem assinatura ativa no RevenueCat
@@ -237,7 +330,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error: deleteUserError } = await supabase
         .from('users')
         .delete()
-        .eq('id', userData.id);
+        .eq('id', user.id);
 
       if (deleteUserError) {
         console.log('deleteAccount: Continuando mesmo com erro na deleção de dados');
@@ -251,7 +344,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: files } = await supabase.storage
           .from('user-images')
           .list('', {
-            search: userData.id
+            search: user.id
           });
 
         if (files && files.length > 0) {
@@ -297,7 +390,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             last_name: 'Usuário',
             profile_url: null
           })
-          .eq('id', userData.id);
+          .eq('id', user.id);
         
         if (markError) {
         } else {
@@ -318,8 +411,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // 7. Limpar estado local
       console.log('deleteAccount: Limpando estado local...');
       setUser(null);
-      setUserData(null);
-      setRevenueCatPremium(null);
       setLoading(false);
       console.log('deleteAccount: Estado local limpo');
 
@@ -335,15 +426,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      userData: enhancedUserData, 
-      loading, 
-      signOut, 
-      updatePremiumStatus, 
-      deleteAccount,
-      refreshPremiumStatus 
-    }}>
+    <AuthContext.Provider value={{ user, loading, signOut, updatePremiumStatus, refreshPremiumStatus, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   );

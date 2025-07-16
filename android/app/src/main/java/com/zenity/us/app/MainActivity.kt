@@ -1,4 +1,4 @@
-package com.zenity.app
+package com.zenity.us.app
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

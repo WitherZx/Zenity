@@ -21,7 +21,7 @@ type FormData = {
   email: string;
 };
 
-const SUPABASE_URL = 'https://cueqhaexkoojemvewdki.supabase.co';
+const SUPABASE_URL = 'https://ouxrcqjejncpmlaehonk.supabase.co';
 
 // Adiciona função utilitária para converter base64 em Blob
 function base64ToBlob(base64: string, contentType = '', sliceSize = 512): Blob {
@@ -74,7 +74,7 @@ export default function EditAccount() {
 
   const pickImage = async () => {
     if (!authUser) {
-      Alert.alert('Erro', 'Usuário não autenticado.');
+      Alert.alert('Error', 'User not authenticated.');
       return;
     }
 
@@ -86,33 +86,33 @@ export default function EditAccount() {
       
       // Se não tem permissão, solicita
       if (existingStatus !== 'granted') {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         finalStatus = status;
       }
       
       // Se ainda não tem permissão após solicitar
       if (finalStatus !== 'granted') {
         Alert.alert(
-          'Permissão Necessária', 
-          'Para alterar sua foto de perfil, precisamos de permissão para acessar sua galeria. Você pode habilitar isso nas configurações do seu dispositivo.',
+          'Permission Required', 
+          'To change your profile photo, we need permission to access your gallery. You can enable it in your device settings.',
           [
-            { text: 'Cancelar', style: 'cancel' }
+            { text: 'Cancel', style: 'cancel' }
           ]
         );
-        return;
-      }
+      return;
+    }
 
       // Agora abre o picker
-      const result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: 'images',
-        allowsEditing: true,
-        aspect: [1, 1],
+      allowsEditing: true,
+      aspect: [1, 1],
         quality: 0.8, // Reduzindo qualidade para melhor performance
         allowsMultipleSelection: false,
-      });
+    });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        setLoading(true);
+      setLoading(true);
         
         const fileUri = result.assets[0].uri;
         const fileName = `${authUser.id}_${Date.now()}.jpg`;
@@ -121,7 +121,7 @@ export default function EditAccount() {
         // Obtém o token de acesso do usuário
         const accessToken = supabase.auth.session()?.access_token || '';
         if (!accessToken) {
-          Alert.alert('Erro', 'Não foi possível obter o token de autenticação.');
+          Alert.alert('Error', 'Could not get authentication token.');
           return;
         }
         // Monta a URL de upload
@@ -134,9 +134,9 @@ export default function EditAccount() {
             'Content-Type': fileType,
           },
           uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-        });
+          });
         if (uploadResult.status !== 200 && uploadResult.status !== 201) {
-          throw new Error('Falha ao fazer upload da imagem.');
+          throw new Error('Failed to upload image.');
         }
         
         // Obtém a URL pública
@@ -158,7 +158,7 @@ export default function EditAccount() {
           .single();
           
         if (userExistsError || !userExists) {
-          Alert.alert('Erro', 'Usuário não encontrado na tabela users.');
+          Alert.alert('Error', 'User not found in users table.');
           return;
         }
         
@@ -174,23 +174,23 @@ export default function EditAccount() {
         const refreshedUrl = publicUrl ? `${publicUrl}?t=${Date.now()}` : '';
         setUserImage(refreshedUrl);
         setUserData((prev: any) => ({ ...prev, profile_url: refreshedUrl }));
-        Alert.alert('Sucesso', 'Foto de perfil atualizada!');
+        Alert.alert('Success', 'Profile photo updated successfully!');
       }
-    } catch (error: any) {
+      } catch (error: any) {
       console.error('Erro no pickImage:', error);
       Alert.alert(
-        'Erro', 
-        error.message || 'Não foi possível processar a imagem. Tente novamente.'
+        'Error', 
+        error.message || 'Could not process the image. Please try again.'
       );
-    } finally {
-      setLoading(false);
+      } finally {
+        setLoading(false);
     }
   };
 
   const handleSubmit = async () => {
     if (!authUser) return;
     if (!formData.firstName.trim() || !formData.lastName.trim()) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos.');
+      Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
     setLoading(true);
@@ -208,10 +208,10 @@ export default function EditAccount() {
         throw error;
       }
 
-      Alert.alert('Sucesso', 'Dados atualizados com sucesso!');
+      Alert.alert('Success', 'Data updated successfully!');
       navigation.goBack();
     } catch (error: any) {
-      Alert.alert('Erro', 'Não foi possível atualizar os dados. Tente novamente.');
+      Alert.alert('Error', 'Could not update data. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -220,7 +220,7 @@ export default function EditAccount() {
   if (profileLoading) {
     return (
       <View style={Styles.container}>
-        <Text style={Styles.label}>Carregando...</Text>
+        <Text style={Styles.label}>Loading...</Text>
       </View>
     );
   }
@@ -228,7 +228,7 @@ export default function EditAccount() {
   return (
     <PageModel2 
       icon="person-outline" 
-      title="conta" 
+      title="account" 
       subtitle={`${formData.firstName} ${formData.lastName}`}
     >
       <View style={Styles.container}>
@@ -246,7 +246,7 @@ export default function EditAccount() {
           {imageHover && !loading && (
             <View style={Styles.imageOverlay}>
               <Ionicons name="camera" size={30} color="#fff" />
-              <Text style={Styles.overlayText}>Alterar foto</Text>
+              <Text style={Styles.overlayText}>Change photo</Text>
             </View>
           )}
           {loading && (
@@ -257,9 +257,9 @@ export default function EditAccount() {
         </TouchableOpacity>
         <View style={Styles.form}>
           <View style={Styles.formItem}>
-            <Text style={Styles.label}>Nome</Text>
+            <Text style={Styles.label}>First Name</Text>
             <TextInput 
-              placeholder="Nome" 
+              placeholder="First Name" 
               style={Styles.input}
               value={formData.firstName}
               onChangeText={(value) => handleChange('firstName', value)}
@@ -267,9 +267,9 @@ export default function EditAccount() {
             />
           </View>
           <View style={Styles.formItem}>
-            <Text style={Styles.label}>Sobrenome</Text>
+            <Text style={Styles.label}>Last Name</Text>
             <TextInput 
-              placeholder="Sobrenome" 
+              placeholder="Last Name" 
               style={Styles.input}
               value={formData.lastName}
               onChangeText={(value) => handleChange('lastName', value)}
@@ -291,7 +291,7 @@ export default function EditAccount() {
               onPress={handleSubmit}
               disabled={loading}
             >
-              <Text style={Styles.buttonText}>Salvar alterações</Text>
+              <Text style={Styles.buttonText}>Save changes</Text>
             </TouchableOpacity>
           </View>
         </View>

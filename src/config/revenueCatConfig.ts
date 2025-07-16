@@ -6,7 +6,7 @@ export const REVENUECAT_CONFIG = {
   
   // IDs dos produtos (apenas semanal)
   PRODUCT_IDS: {
-    PREMIUM_WEEKLY: 'premium_weekly',
+    PREMIUM_WEEKLY: 'premium_weekly:default',
   },
   
   // Nome do offering principal

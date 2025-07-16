@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "Zenity",
-    "slug": "zenity",
-    "scheme": "zenity",
+    "name": "Zenity - Mental Health",
+    "slug": "zenity-us",
+    "scheme": "zenity-us",
     "main": "./src/index.js",
-    "version": "1.0.15",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/images/adaptive-icon.png",
     "userInterfaceStyle": "light",
@@ -16,13 +16,13 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.zenity.ios",
+      "bundleIdentifier": "com.zenity.us.ios",
       "infoPlist": {
         "UIBackgroundModes": [
           "audio",
           "audio"
         ],
-        "GADApplicationIdentifier": "ca-app-pub-5233713899126724~7664404389",
+        "GADApplicationIdentifier": "ca-app-pub-5233713899126724~3028963299",
         "CFBundleIconName": "AppIcon",
         "NSPhotoLibraryUsageDescription": "Este app precisa acessar sua galeria para permitir que você escolha uma foto de perfil.",
         "NSPhotoLibraryAddUsageDescription": "Este app precisa acessar sua galeria para salvar fotos de perfil.",
@@ -36,12 +36,12 @@
         ],
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "15",
+      "buildNumber": "5",
       "requireFullScreen": true
     },
     "android": {
-      "package": "com.zenity.app",
-      "versionCode": 15,
+      "package": "com.zenity.us.app",
+      "versionCode": 5,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#0CC0DF"
@@ -50,7 +50,7 @@
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
       "config": {
-        "googleMobileAdsAppId": "ca-app-pub-5233713899126724~8976251551"
+        "googleMobileAdsAppId": "ca-app-pub-5233713899126724~3028963299"
       }
     },
     "web": {
@@ -66,15 +66,20 @@
       [
         "react-native-google-mobile-ads",
         {
-          "androidAppId": "ca-app-pub-5233713899126724~8976251551",
-          "iosAppId": "ca-app-pub-5233713899126724~7664404389"
+          "androidAppId": "ca-app-pub-5233713899126724~3028963299",
+          "iosAppId": "ca-app-pub-5233713899126724~3028963299"
         }
       ],
-      "react-native-iap"
+      [
+        "react-native-iap",
+        {
+          "enableAmazonAppstore": false
+        }
+      ]
     ],
     "extra": {
       "eas": {
-        "projectId": "b0f5c296-95d4-48fb-a938-8eb0e50cae23"
+        "projectId": "ad6912ec-ceba-4c75-983a-78eaf23d6170"
       }
     },
     "jsEngine": "jsc",

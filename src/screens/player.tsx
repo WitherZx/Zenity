@@ -177,7 +177,7 @@ function EnhancedAudioPlayer({
       if (!currentAudio?.file) {
         setState(prev => ({
           ...prev,
-          loadError: "Arquivo de áudio inválido",
+          loadError: "Invalid audio file",
           isLoading: false,
           loadingProgress: 0
         }));
@@ -211,7 +211,7 @@ function EnhancedAudioPlayer({
     } catch (error: any) {
       setState(prev => ({
         ...prev,
-        loadError: `Não foi possível carregar o áudio: ${error.message}`,
+        loadError: `Could not load audio: ${error.message}`,
         isLoading: false,
         loadingProgress: 0
       }));
@@ -359,7 +359,7 @@ function EnhancedAudioPlayer({
       <View style={playerStyles.errorContainer}>
         <Text style={playerStyles.errorText}>{state.loadError}</Text>
         <TouchableOpacity style={playerStyles.retryButton} onPress={loadAudio}>
-          <Text style={playerStyles.retryButtonText}>Tentar novamente</Text>
+          <Text style={playerStyles.retryButtonText}>Try again</Text>
         </TouchableOpacity>
       </View>
     );
@@ -479,7 +479,7 @@ function EnhancedAudioPlayer({
 
       <View style={playerStyles.infoContainer}>
         <Text style={playerStyles.infoText}>
-          {state.currentIndex + 1} de {state.queue.length}
+          {state.currentIndex + 1} of {state.queue.length}
         </Text>
       </View>
     </View>
@@ -557,11 +557,11 @@ export default function Player() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: "#0CC0DF" }}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Erro: Parâmetros incompletos</Text>
-          <Text style={styles.errorSubtext}>moduleId: {moduleId || "não fornecido"}</Text>
-          <Text style={styles.errorSubtext}>contentId: {contentId || "não fornecido"}</Text>
+          <Text style={styles.errorText}>Error: Incomplete parameters</Text>
+          <Text style={styles.errorSubtext}>moduleId: {moduleId || "not provided"}</Text>
+          <Text style={styles.errorSubtext}>contentId: {contentId || "not provided"}</Text>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Text style={styles.backButtonText}>Voltar</Text>
+            <Text style={styles.backButtonText}>Back</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -574,10 +574,10 @@ export default function Player() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: "#0CC0DF" }}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Erro: Módulo não encontrado</Text>
-          <Text style={styles.errorSubtext}>ID procurado: {moduleId}</Text>
+          <Text style={styles.errorText}>Error: Module not found</Text>
+          <Text style={styles.errorSubtext}>Searched ID: {moduleId}</Text>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Text style={styles.backButtonText}>Voltar</Text>
+            <Text style={styles.backButtonText}>Back</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -590,11 +590,11 @@ export default function Player() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: "#0CC0DF" }}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Erro: Conteúdo não encontrado</Text>
-          <Text style={styles.errorSubtext}>Módulo: {module.name}</Text>
-          <Text style={styles.errorSubtext}>ID do conteúdo procurado: {contentId}</Text>
+          <Text style={styles.errorText}>Error: Content not found</Text>
+          <Text style={styles.errorSubtext}>Module: {module.name}</Text>
+          <Text style={styles.errorSubtext}>Content ID searched: {contentId}</Text>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Text style={styles.backButtonText}>Voltar</Text>
+            <Text style={styles.backButtonText}>Back</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>

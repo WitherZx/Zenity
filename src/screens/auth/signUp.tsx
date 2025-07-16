@@ -21,6 +21,7 @@ export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigation = useNavigation<NavigationProp>();
 
   const [formData, setFormData] = useState<FormData>({
@@ -48,37 +49,42 @@ export default function SignUp() {
   };
 
   const handleSubmit = async () => {
-    if (!isFormValid()) return;
     setLoading(true);
     try {
+      setError('');
+      // 1. Cria usuário no Auth
       const { user, session, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
       });
-      if (error) {
-        Alert.alert('Erro', error.message || 'Erro ao criar conta.');
-      } else {
-        if (user) {
-          await supabase.auth.update({
-            data: {
-              first_name: formData.firstName,
-              last_name: formData.lastName,
-            }
-          });
-          const { error: insertError } = await supabase.from('users').insert({
-              id: user.id,
-              first_name: formData.firstName,
-              last_name: formData.lastName,
-              is_premium: false,
-              profile_url: 'https://cueqhaexkoojemvewdki.supabase.co/storage/v1/object/public/user-images//defaultUser.png',
-          });
-          if (insertError) {
-            Alert.alert('Erro', 'Conta criada, mas houve um erro ao criar o perfil.');
-          }
-        }
+      console.log('Auth signUp result:', { user, session, error });
+      if (error || !user) {
+        setError(error?.message || 'Error creating user.');
+        setLoading(false);
+        return;
       }
-    } catch (error: any) {
-      Alert.alert('Erro', error.message || 'Erro ao criar conta.');
+      // 2. Cria perfil na tabela users
+      try {
+        const { error: insertError } = await supabase.from('users').insert({
+          id: user.id,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          is_premium: false,
+          profile_url: 'https://ouxrcqjejncpmlaehonk.supabase.co/storage/v1/object/public/user-images//defaultUser.png',
+        });
+        console.log('Insert user result:', { insertError });
+        if (insertError) {
+          setError('Account created, but there was an error creating the profile.');
+        } else {
+          setError('');
+        }
+      } catch (insertCatchError) {
+        console.log('Insert user catch error:', insertCatchError);
+        setError('Account created, but there was an error creating the profile.');
+      }
+    } catch (mainCatchError: any) {
+      console.log('Main catch error:', mainCatchError);
+      setError(mainCatchError.message || 'Error creating account.');
     } finally {
       setLoading(false);
     }
@@ -87,12 +93,12 @@ export default function SignUp() {
   return (
     <View style={Styles.container}>
       <Image source={require('../../../assets/images/logo2.png')} style={Styles.logo} />
-      <Text style={Styles.title}>Crie sua conta</Text>
+      <Text style={Styles.title}>Create your account</Text>
       <View style={Styles.form}>
         <View style={Styles.row}>
           <View style={Styles.rowItem}>
             <TextInput 
-              placeholder="Nome" 
+              placeholder="First Name" 
               style={Styles.input}
               placeholderTextColor="#91D2DE"
               value={formData.firstName}
@@ -102,7 +108,7 @@ export default function SignUp() {
           </View>
           <View style={Styles.rowItem}>
             <TextInput 
-              placeholder="Sobrenome" 
+              placeholder="Last Name" 
               style={Styles.input}
               placeholderTextColor="#91D2DE"
               value={formData.lastName}
@@ -125,7 +131,7 @@ export default function SignUp() {
 
         <View style={Styles.passwordContainer}>
           <TextInput 
-            placeholder="Senha" 
+            placeholder="Password" 
             style={[Styles.input, { paddingRight: 50 }]}
             placeholderTextColor="#91D2DE"
             secureTextEntry={!showPassword}
@@ -148,7 +154,7 @@ export default function SignUp() {
 
         <View style={Styles.passwordContainer}>
           <TextInput 
-            placeholder="Confirmar senha" 
+            placeholder="Confirm password" 
             style={[Styles.input, { paddingRight: 50 }]}
             placeholderTextColor="#91D2DE"
             secureTextEntry={!showConfirmPassword}
@@ -180,12 +186,12 @@ export default function SignUp() {
             <ActivityIndicator color="#0097B2" />
           ) : (
             <Text style={[Styles.buttonText, !isFormValid() && Styles.buttonTextDisabled]}>
-              Criar conta
+              Create account
             </Text>
           )}
         </TouchableOpacity>
         <Text style={Styles.text}>
-          Já tem uma conta? <Text style={Styles.textBold} onPress={() => navigation.navigate('Login')}>Faça login</Text>
+          Already have an account? <Text style={Styles.textBold} onPress={() => navigation.navigate('Login')}>Sign in</Text>
         </Text>
       </View>
     </View>

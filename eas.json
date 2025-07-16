@@ -1,39 +1,34 @@
 {
   "cli": {
-    "version": ">= 5.9.1"
+    "version": ">= 16.12.0",
+    "appVersionSource": "remote"
   },
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal",
-      "android": {
-        "gradleCommand": ":app:assembleDebug"
-      }
+      "distribution": "internal"
     },
     "preview": {
       "distribution": "internal"
     },
-    "production": {
-      "ios": {
-        "resourceClass": "m-medium"
-      }
-    },
-    "development-simulator": {
+        "production": {
       "developmentClient": true,
-      "distribution": "internal",
-      "ios": {
-        "simulator": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_USE_COMMUNITY_AUTOLINKING": "1",
+        "EXPO_NO_CAPABILITY_SYNC": "1"
       },
-      "environment": "development"
+      "android": {
+        "image": "sdk-53",
+        "gradleCommand": ":app:bundleRelease -x lint",
+        "cache": {
+          "disabled": true
+        },
+        "buildType": "app-bundle"
+      }
     }
   },
   "submit": {
-    "production": {
-      "ios": {
-        "appleId": "adm@hnoapps.com",
-        "ascAppId": "6746874584",
-        "appleTeamId": "S3RDH669C7"
-      }
-    }
+    "production": {}
   }
 }

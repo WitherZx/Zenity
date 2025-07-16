@@ -134,16 +134,16 @@ const MyAccount: React.FC = () => {
 
   const handleDeleteAccount = () => {
     Alert.alert(
-      'Deletar Conta',
-      'Esta ação é irreversível. Todos os seus dados serão permanentemente removidos, incluindo:\n\n• Seu perfil e informações pessoais\n• Suas fotos de perfil\n• Histórico de uso do app\n• Todas as configurações salvas\n\nSe você possui uma assinatura ativa, será necessário cancelá-la antes de deletar a conta.\n\nTem certeza que deseja continuar?',
+      'Delete Account',
+      'This action is irreversible. All your data will be permanently removed, including:\n\n• Your profile and personal information\n• Your profile photos\n• App usage history\n• All saved settings\n\nIf you have an active subscription, you will need to cancel it before deleting your account.\n\nAre you sure you want to continue?',
       [
         {
-          text: 'Cancelar',
+          text: 'Cancel',
           style: 'cancel',
-          onPress: () => console.log('handleDeleteAccount: Usuário cancelou primeira confirmação'),
+          onPress: () => console.log('handleDeleteAccount: User canceled first confirmation'),
         },
         {
-          text: 'Deletar Conta',
+          text: 'Delete Account',
           style: 'destructive',
           onPress: () => {
             setShowPasswordModal(true);
@@ -155,7 +155,7 @@ const MyAccount: React.FC = () => {
 
   const handleConfirmDelete = async () => {
     if (!password || password.trim() === '') {
-      Alert.alert('Erro', 'Por favor, digite sua senha para confirmar.');
+      Alert.alert('Error', 'Please enter your password to confirm.');
       return;
     }
     
@@ -168,8 +168,8 @@ const MyAccount: React.FC = () => {
         setShowPasswordModal(false);
         setPassword('');
         Alert.alert(
-          'Conta Deletada',
-          'Sua conta foi deletada com sucesso.',
+          'Account Deleted',
+          'Your account has been successfully deleted.',
           [
             {
               text: 'OK',
@@ -179,10 +179,10 @@ const MyAccount: React.FC = () => {
           ]
         );
       } else {
-        Alert.alert('Erro', result.error || 'Erro ao deletar conta');
+        Alert.alert('Error', result.error || 'Error deleting account');
       }
     } catch (error: any) {
-      Alert.alert('Erro', 'Erro inesperado ao deletar conta');
+      Alert.alert('Error', 'Unexpected error deleting account');
     } finally {
       setDeleting(false);
     }
@@ -226,27 +226,28 @@ const MyAccount: React.FC = () => {
           justifyContent: 'center',
           gap: 8,
         }}>
-          <Text style={{ color: '#fff', fontWeight: 'bold', marginRight: 6 }}>Usuário Premium</Text>
+          <Text style={{ color: '#fff', fontWeight: 'bold', marginRight: 6 }}>Premium User</Text>
           <Icon name="diamond" color={'#fff'} size={18}/>
         </View>
       )}
       <Text style={styles.name}>{userData?.first_name ?? ''} {userData?.last_name ?? ''}</Text>
       </View>
       <View>
+        {/* Só mostra o botão de assinar premium se o usuário não for premium */}
         {!userData?.is_premium && (
           <CustomButton 
-            text="Assinar Premium" 
+            text="Subscribe to Premium" 
             iconName="diamond" 
             onPress={() => navigation.navigate('Premium')} 
           />
         )}
         <CustomButton 
-          text="Editar dados" 
+          text="Edit data" 
           iconName="user" 
           onPress={() => navigation.navigate('EditAccount', { currentUserData: userData })} 
         />
         <CustomButton 
-          text="Sair/Trocar de conta" 
+          text="Sign out/Change account" 
           iconName="sign-out" 
           onPress={signOut} 
         />
@@ -254,7 +255,7 @@ const MyAccount: React.FC = () => {
           style={styles.deleteButton}
           onPress={handleDeleteAccount}
         >
-          <Text style={styles.deleteButtonText}>Deletar sua conta</Text>
+          <Text style={styles.deleteButtonText}>Delete your account</Text>
         </TouchableOpacity>
       </View>
 
@@ -267,13 +268,13 @@ const MyAccount: React.FC = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Confirmar Exclusão</Text>
+            <Text style={styles.modalTitle}>Confirm Deletion</Text>
             <Text style={styles.modalSubtitle}>
-              Digite sua senha para confirmar a exclusão da conta:
+              Enter your password to confirm account deletion:
             </Text>
             <TextInput
               style={styles.passwordInput}
-              placeholder="Sua senha"
+              placeholder="Your password"
               secureTextEntry
               value={password}
               onChangeText={setPassword}
@@ -286,7 +287,7 @@ const MyAccount: React.FC = () => {
                 onPress={handleCancelDelete}
                 disabled={deleting}
               >
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.modalButton, styles.deleteModalButton, deleting && styles.disabledButton]}
@@ -294,7 +295,7 @@ const MyAccount: React.FC = () => {
                 disabled={deleting}
               >
                 <Text style={styles.deleteModalButtonText}>
-                  {deleting ? 'Deletando...' : 'Deletar'}
+                  {deleting ? 'Deleting...' : 'Delete'}
                 </Text>
               </TouchableOpacity>
             </View>
