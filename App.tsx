@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
+import { View } from 'react-native';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { PlayerProvider } from './src/contexts/PlayerContext';
 import Navigation from './src/navigation';
@@ -13,15 +13,33 @@ SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
-  const [loadingError, setLoadingError] = useState(false);
 
   useEffect(() => {
     async function prepare() {
       try {
-        console.log('App: Iniciando carregamento...');
+        // Inicializa o AdMob com tratamento de erro
+        try {
+          await mobileAds().initialize();
+          
+          // Configura o AdMob
+          await mobileAds().setRequestConfiguration({
+            maxAdContentRating: MaxAdContentRating.PG,
+            tagForChildDirectedTreatment: true,
+            tagForUnderAgeOfConsent: true,
+          });
+        } catch (adError) {
+          // Não falha o app se o AdMob não inicializar
+        }
 
-        // Carrega as fontes PRIMEIRO (crítico)
-        console.log('App: Carregando fontes...');
+        // Inicializa o RevenueCat com tratamento de erro
+        try {
+          const revenueCatService = RevenueCatService.getInstance();
+          await revenueCatService.initialize();
+        } catch (rcError) {
+          // Não falha o app se o RevenueCat não inicializar
+        }
+
+        // Carrega as fontes
         await Font.loadAsync({
           'Montserrat-Thin': require('./assets/fonts/Montserrat-Thin.ttf'),
           'Montserrat-ExtraLight': require('./assets/fonts/Montserrat-ExtraLight.ttf'),
@@ -42,101 +60,18 @@ export default function App() {
           'Montserrat-ExtraBoldItalic': require('./assets/fonts/Montserrat-ExtraBoldItalic.ttf'),
           'Montserrat-BlackItalic': require('./assets/fonts/Montserrat-BlackItalic.ttf'),
         });
-        console.log('App: Fontes carregadas com sucesso');
-
-        // Inicializa o AdMob (não crítico - pode falhar)
-        try {
-          console.log('App: Inicializando AdMob...');
-          await mobileAds().initialize();
-          
-          // Configura o AdMob
-          await mobileAds().setRequestConfiguration({
-            maxAdContentRating: MaxAdContentRating.PG,
-            tagForChildDirectedTreatment: true,
-            tagForUnderAgeOfConsent: true,
-          });
-          console.log('App: AdMob inicializado com sucesso');
-        } catch (adError) {
-          console.log('App: AdMob falhou, continuando sem publicidade:', adError);
-        }
-
-        // Inicializa o RevenueCat (não crítico - pode falhar)
-        try {
-          console.log('App: Inicializando RevenueCat...');
-          const revenueCatService = RevenueCatService.getInstance();
-          await revenueCatService.initialize();
-          console.log('App: RevenueCat inicializado com sucesso');
-        } catch (rcError) {
-          console.log('App: RevenueCat falhou, continuando sem premium:', rcError);
-        }
-
-        console.log('App: Carregamento concluído com sucesso');
       } catch (error) {
-        console.error('App: Erro crítico no carregamento:', error);
-        setLoadingError(true);
+        // Mesmo com erro, marca o app como pronto para não travar
       } finally {
         setAppIsReady(true);
-        try {
-          await SplashScreen.hideAsync();
-        } catch (splashError) {
-          console.log('App: Erro ao esconder splash screen:', splashError);
-        }
+        await SplashScreen.hideAsync();
       }
     }
-    
     prepare();
   }, []);
 
-  // Loading screen melhorado
   if (!appIsReady) {
-    return (
-      <View style={{ 
-        flex: 1, 
-        justifyContent: 'center', 
-        alignItems: 'center',
-        backgroundColor: '#667eea'
-      }}>
-        <ActivityIndicator size="large" color="#ffffff" />
-        <Text style={{ 
-          color: 'white', 
-          marginTop: 20, 
-          fontSize: 16,
-          fontWeight: '600'
-        }}>
-          Carregando Zenity...
-        </Text>
-      </View>
-    );
-  }
-
-  // Error screen para casos críticos
-  if (loadingError) {
-    return (
-      <View style={{ 
-        flex: 1, 
-        justifyContent: 'center', 
-        alignItems: 'center',
-        backgroundColor: '#e53e3e',
-        padding: 20
-      }}>
-        <Text style={{ 
-          color: 'white', 
-          fontSize: 18,
-          fontWeight: 'bold',
-          textAlign: 'center',
-          marginBottom: 10
-        }}>
-          Erro ao carregar o app
-        </Text>
-        <Text style={{ 
-          color: 'white', 
-          fontSize: 14,
-          textAlign: 'center'
-        }}>
-          Tente reiniciar o aplicativo
-        </Text>
-      </View>
-    );
+    return null;
   }
 
   return (
