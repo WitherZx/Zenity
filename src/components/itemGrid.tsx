@@ -34,7 +34,7 @@ export default function ItemGrid({ contentId, moduleId, image, text, duration }:
             <Image source={typeof image === 'string' ? { uri: image } : image} style={styles.image} />
             <View style={styles.textContainer}>
                 <CustomText style={styles.text}>{text}</CustomText>
-                <CustomText style={styles.time}>{duration} Minutos</CustomText>
+                <CustomText style={styles.time}>{duration} Minutes</CustomText>
             </View>
             <Ionicons name="chevron-forward" size={24} color="#fff" />
         </TouchableOpacity>

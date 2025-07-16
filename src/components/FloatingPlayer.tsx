@@ -55,10 +55,10 @@ export default function FloatingPlayer() {
   // PanResponder para o gesto de swipe
   const panResponder = React.useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponder: () => false, // Não captura o toque inicial
       onMoveShouldSetPanResponder: (_, gestureState) => {
         // Só permite o gesto se for um movimento horizontal significativo
-        return Math.abs(gestureState.dx) > Math.abs(gestureState.dy * 2);
+        return Math.abs(gestureState.dx) > 20 && Math.abs(gestureState.dx) > Math.abs(gestureState.dy * 2);
       },
       onPanResponderMove: (_, gestureState) => {
         if (isRemoving) return; // Não permite movimento se já estiver removendo
@@ -117,104 +117,69 @@ export default function FloatingPlayer() {
 
     // Função para verificar se uma rota ou suas sub-rotas é Player
     const isPlayerRoute = (route: any): boolean => {
-      // Verifica se a rota atual é Player e está focada
-      if (route.name === 'Player' && route.state?.index === undefined) {
+      console.log('FloatingPlayer: Verificando rota:', route.name);
+      
+      // Verifica se a rota atual é Player
+      if (route.name === 'Player') {
+        console.log('FloatingPlayer: Encontrou tela Player, ocultando FloatingPlayer');
         return true;
       }
 
       // Verifica nas sub-rotas
       if (route.state?.routes) {
-        return route.state.routes.some(isPlayerRoute);
+        const activeRoute = route.state.routes[route.state.index];
+        return isPlayerRoute(activeRoute);
       }
 
       return false;
     };
 
-    // Verifica todas as rotas ativas
-    return state.routes.some(isPlayerRoute);
+    // Obtém a rota ativa atual
+    const activeRoute = state.routes[state.index];
+    const inPlayer = isPlayerRoute(activeRoute);
+    
+    console.log('FloatingPlayer: isInPlayer =', inPlayer);
+    return inPlayer;
   });
 
   // Só mostra o player flutuante se:
   // 1. Tiver um áudio atual
   // 2. NÃO estiver na página do player (Player)
   // 3. NÃO estiver em processo de remoção
+  React.useEffect(() => {
+    console.log('FloatingPlayer: Estados de visibilidade:', {
+      hasCurrentContent: !!currentContent,
+      isInPlayer,
+      isRemoving,
+      shouldShow: !(!currentContent || isInPlayer || isRemoving)
+    });
+  }, [currentContent, isInPlayer, isRemoving]);
+
   if (!currentContent || isInPlayer || isRemoving) {
     return null;
   }
 
   const navigateToContent = (moduleId: string, contentId: string) => {
     try {
-      // Obtém o estado atual da navegação
-      const state = navigation.getState();
-      const currentRoute = state.routes[state.index];
+      console.log('FloatingPlayer: Navegando para Player com:', { moduleId, contentId });
       
-      // Navega para o Player dentro da stack atual
-      const params = { moduleId, contentId };
-
-      // Navega para a rota correta baseado na tab atual
-      switch (currentRoute.name) {
-        case 'TabsNav':
-          const currentTab = currentRoute.state?.routes[currentRoute.state.index];
-          switch (currentTab?.name) {
-            case 'Inicio':
-              navigation.navigate('TabsNav', {
-                screen: 'Inicio',
-                params: {
-                  screen: 'Player',
-                  params
-                }
-              });
-              break;
-            case 'Busca':
-              navigation.navigate('TabsNav', {
-                screen: 'Busca',
-                params: {
-                  screen: 'Player',
-                  params
-                }
-              });
-              break;
-            case 'Premium':
-              navigation.navigate('TabsNav', {
-                screen: 'Premium',
-                params: {
-                  screen: 'Player',
-                  params
-                }
-              });
-              break;
-            case 'Minha Conta':
-              navigation.navigate('TabsNav', {
-                screen: 'Minha Conta',
-                params: {
-                  screen: 'Player',
-                  params
-                }
-              });
-              break;
-            default:
-              // Fallback para a home stack
-              navigation.navigate('TabsNav', {
-                screen: 'Inicio',
-                params: {
-                  screen: 'Player',
-                  params
-                }
-              });
-          }
-          break;
-        default:
-          // Fallback para a home stack
-          navigation.navigate('TabsNav', {
-            screen: 'Inicio',
-            params: {
-              screen: 'Player',
-              params
-            }
-          });
-      }
+      // Navegação simplificada - sempre vai para o Home stack e depois para o Player
+      navigation.navigate('TabsNav', {
+        screen: 'Home',
+        params: {
+          screen: 'Player',
+          params: { moduleId, contentId }
+        }
+      });
     } catch (error) {
-      console.error('Error navigating to content:', error);
+      console.error('FloatingPlayer: Erro na navegação:', error);
+      
+      // Fallback ainda mais simples
+      try {
+        navigation.navigate('Player', { moduleId, contentId });
+      } catch (fallbackError) {
+        console.error('FloatingPlayer: Erro no fallback:', fallbackError);
+      }
     }
   };
 
@@ -269,7 +234,19 @@ export default function FloatingPlayer() {
   };
 
   const handleOpenPlayer = () => {
-    if (!currentContent) return;
+    console.log('FloatingPlayer: handleOpenPlayer chamado');
+    
+    if (!currentContent) {
+      console.log('FloatingPlayer: Não há currentContent');
+      return;
+    }
+    
+    console.log('FloatingPlayer: Dados do currentContent:', {
+      id: currentContent.id,
+      moduleId: currentContent.moduleId,
+      name: currentContent.name
+    });
+    
     navigateToContent(currentContent.moduleId, currentContent.id);
   };
 
@@ -307,6 +284,8 @@ export default function FloatingPlayer() {
       <TouchableOpacity 
         style={styles.mainContent} 
         onPress={handleOpenPlayer}
+        activeOpacity={0.7}
+        delayPressIn={0}
       >
         <Image 
           source={currentContent.thumbnail} 

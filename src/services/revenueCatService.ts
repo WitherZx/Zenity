@@ -11,7 +11,9 @@ const REVENUECAT_API_KEYS = {
 class RevenueCatService {
   private static instance: RevenueCatService;
   private isInitialized = false;
-  private static lastError: string | null = null;
+  private isAvailable = true;
+  private lastError: string | null = null;
+  private customerInfoUpdateListeners: ((customerInfo: any) => void)[] = [];
 
   private constructor() {}
 
@@ -22,71 +24,109 @@ class RevenueCatService {
     return RevenueCatService.instance;
   }
 
-  // Verificar se serviço está disponível
-  static async isServiceAvailable(): Promise<boolean> {
-    try {
-      console.log('RevenueCat: Checking service availability...');
-      await Purchases.getCustomerInfo();
-      console.log('RevenueCat: Service is available');
-      this.lastError = null;
-      return true;
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.log('RevenueCat service not available:', errorMsg);
-      this.lastError = errorMsg;
-      return false;
-    }
+  // Método para verificar se o RevenueCat está disponível
+  isServiceAvailable(): boolean {
+    return this.isAvailable;
   }
 
-  // Obter último erro
-  static getLastError(): string | null {
+  // Método para obter o último erro
+  getLastError(): string | null {
     return this.lastError;
   }
 
-  async initialize(userId?: string): Promise<void> {
-    if (this.isInitialized) {
-      console.log('RevenueCat: Already initialized');
-      return;
+  // Adiciona listener para mudanças no customer info
+  addCustomerInfoUpdateListener(listener: (customerInfo: any) => void): void {
+    this.customerInfoUpdateListeners.push(listener);
+  }
+
+  // Remove listener
+  removeCustomerInfoUpdateListener(listener: (customerInfo: any) => void): void {
+    const index = this.customerInfoUpdateListeners.indexOf(listener);
+    if (index > -1) {
+      this.customerInfoUpdateListeners.splice(index, 1);
     }
+  }
+
+  // Notifica todos os listeners sobre mudanças
+  private notifyCustomerInfoUpdateListeners(customerInfo: any): void {
+    this.customerInfoUpdateListeners.forEach(listener => {
+      try {
+        listener(customerInfo);
+      } catch (error) {
+        console.log('RevenueCat: Erro ao notificar listener:', error);
+      }
+    });
+  }
+
+  async initialize(userId?: string): Promise<void> {
+    if (this.isInitialized) return;
+    
     try {
-      console.log('RevenueCat: Initializing with userId:', userId || 'anonymous');
+      console.log('RevenueCat: Tentando inicializar...');
       await Purchases.configure({
         apiKey: Platform.OS === 'ios' ? REVENUECAT_API_KEYS.ios : REVENUECAT_API_KEYS.android,
         appUserID: userId,
       });
       Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
+      
+      // Configura listener para mudanças automáticas no status de compra
+      Purchases.addCustomerInfoUpdateListener((customerInfo) => {
+        console.log('RevenueCat: Customer info atualizado automaticamente');
+        this.notifyCustomerInfoUpdateListeners(customerInfo);
+      });
+      
       this.isInitialized = true;
-      RevenueCatService.lastError = null;
-      console.log('RevenueCat: Successfully initialized');
-    } catch (error) {
+      this.isAvailable = true;
+      this.lastError = null;
+      console.log('RevenueCat: Inicializado com sucesso');
+    } catch (error: any) {
       this.isInitialized = false;
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      RevenueCatService.lastError = errorMsg;
-      console.error('RevenueCat: Initialization failed:', errorMsg);
+      console.log('RevenueCat: Erro na inicialização:', error);
+      
+      // Detecta tipos específicos de erro
+      if (error.message && error.message.includes('Billing is not available')) {
+        this.isAvailable = false;
+        this.lastError = 'Google Play Billing não disponível neste dispositivo';
+      } else if (error.message && error.message.includes('network')) {
+        this.isAvailable = false;
+        this.lastError = 'Erro de conexão de rede';
+      } else {
+        this.isAvailable = false;
+        this.lastError = error.message || 'Erro desconhecido na inicialização';
+      }
+      
       throw error;
     }
   }
 
   async getOfferings(): Promise<PurchasesOffering | null> {
+    if (!this.isAvailable) {
+      console.log('RevenueCat: Serviço não disponível para getOfferings');
+      return null;
+    }
+
     if (!this.isInitialized) {
       try {
-        console.log('RevenueCat: Not initialized, attempting to initialize...');
         await this.initialize();
       } catch (error) {
-        console.error('RevenueCat: Failed to initialize in getOfferings');
+        console.log('RevenueCat: Falha na inicialização para getOfferings');
         return null;
       }
     }
+    
     try {
-      console.log('RevenueCat: Fetching offerings...');
+      console.log('RevenueCat: Buscando offerings...');
       const offerings = await Purchases.getOfferings();
-      console.log('RevenueCat: Successfully fetched offerings:', offerings.current?.identifier || 'no current offering');
-      RevenueCatService.lastError = null;
+      console.log('RevenueCat: Offerings obtidos com sucesso');
       return offerings.current;
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.error('RevenueCat: Failed to get offerings:', errorMsg);
-      RevenueCatService.lastError = errorMsg;
+    } catch (error: any) {
+      console.log('RevenueCat: Erro ao buscar offerings:', error);
+      
+      if (error.message && error.message.includes('Billing is not available')) {
+        this.isAvailable = false;
+        this.lastError = 'Google Play Billing não disponível';
+      }
+      
       return null;
     }
   }
@@ -94,23 +134,15 @@ class RevenueCatService {
   async purchasePackage(packageToPurchase: PurchasesPackage): Promise<CustomerInfo> {
     if (!this.isInitialized) {
       try {
-        console.log('RevenueCat: Not initialized, attempting to initialize...');
         await this.initialize();
       } catch (error) {
-        console.error('RevenueCat: Failed to initialize in purchasePackage');
         throw new Error('RevenueCat not available');
       }
     }
     try {
-      console.log('RevenueCat: Starting purchase for package:', packageToPurchase.identifier);
       const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
-      console.log('RevenueCat: Purchase successful for package:', packageToPurchase.identifier);
-      RevenueCatService.lastError = null;
       return customerInfo;
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.error('RevenueCat: Purchase failed:', errorMsg);
-      RevenueCatService.lastError = errorMsg;
       throw error;
     }
   }
@@ -118,163 +150,80 @@ class RevenueCatService {
   async restorePurchases(): Promise<CustomerInfo> {
     if (!this.isInitialized) {
       try {
-        console.log('RevenueCat: Not initialized, attempting to initialize...');
         await this.initialize();
       } catch (error) {
-        console.error('RevenueCat: Failed to initialize in restorePurchases');
         throw new Error('RevenueCat not available');
       }
     }
     try {
-      console.log('RevenueCat: Restoring purchases...');
       const customerInfo = await Purchases.restorePurchases();
-      console.log('RevenueCat: Successfully restored purchases');
-      RevenueCatService.lastError = null;
       return customerInfo;
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.error('RevenueCat: Failed to restore purchases:', errorMsg);
-      RevenueCatService.lastError = errorMsg;
       throw error;
     }
   }
 
   async getCustomerInfo(): Promise<CustomerInfo> {
+    if (!this.isAvailable) {
+      throw new Error(`RevenueCat not available: ${this.lastError}`);
+    }
+
     if (!this.isInitialized) {
       try {
-        console.log('RevenueCat: Not initialized, attempting to initialize...');
         await this.initialize();
       } catch (error) {
-        console.error('RevenueCat: Failed to initialize in getCustomerInfo');
         throw new Error('RevenueCat not available');
       }
     }
+    
     try {
-      console.log('RevenueCat: Fetching customer info...');
       const customerInfo = await Purchases.getCustomerInfo();
-      console.log('RevenueCat: Successfully fetched customer info');
-      RevenueCatService.lastError = null;
       return customerInfo;
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.error('RevenueCat: Failed to get customer info:', errorMsg);
-      RevenueCatService.lastError = errorMsg;
+    } catch (error: any) {
+      console.log('RevenueCat: Erro ao buscar customerInfo:', error);
+      
+      if (error.message && error.message.includes('Billing is not available')) {
+        this.isAvailable = false;
+        this.lastError = 'Google Play Billing não disponível';
+      }
+      
       throw error;
     }
   }
 
   async setUserId(userId: string): Promise<void> {
     try {
-      console.log('RevenueCat: Setting user ID:', userId);
       await Purchases.logIn(userId);
-      console.log('RevenueCat: Successfully set user ID');
-      RevenueCatService.lastError = null;
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.error('RevenueCat: Failed to set user ID:', errorMsg);
-      RevenueCatService.lastError = errorMsg;
-    }
+    } catch (error) {}
   }
 
   isPremium(customerInfo: CustomerInfo): boolean {
-    try {
-      console.log('RevenueCat: Checking premium status...');
-      const entitlement = customerInfo.entitlements.active[REVENUECAT_CONFIG.ENTITLEMENT_ID];
-      const isPremium = entitlement !== undefined;
-      console.log('RevenueCat: Premium status:', isPremium);
-      return isPremium;
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.error('RevenueCat: Failed to check premium status:', errorMsg);
-      RevenueCatService.lastError = errorMsg;
-      return false;
-    }
+    const entitlement = customerInfo.entitlements.active[REVENUECAT_CONFIG.ENTITLEMENT_ID];
+    return entitlement !== undefined;
   }
 
   getPremiumExpirationDate(customerInfo: CustomerInfo): Date | null {
-    try {
-      console.log('RevenueCat: Getting premium expiration date...');
-      const entitlement = customerInfo.entitlements.active[REVENUECAT_CONFIG.ENTITLEMENT_ID];
-      if (entitlement && entitlement.expirationDate) {
-        const expirationDate = new Date(entitlement.expirationDate);
-        console.log('RevenueCat: Premium expires on:', expirationDate);
-        return expirationDate;
-      }
-      console.log('RevenueCat: No expiration date found');
-      return null;
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.error('RevenueCat: Failed to get expiration date:', errorMsg);
-      RevenueCatService.lastError = errorMsg;
-      return null;
+    const entitlement = customerInfo.entitlements.active[REVENUECAT_CONFIG.ENTITLEMENT_ID];
+    if (entitlement && entitlement.expirationDate) {
+      return new Date(entitlement.expirationDate);
     }
+    return null;
   }
 
   async logout(): Promise<void> {
     try {
-      console.log('RevenueCat: Logging out...');
       await Purchases.logOut();
-      console.log('RevenueCat: Successfully logged out');
-      RevenueCatService.lastError = null;
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.error('RevenueCat: Failed to logout:', errorMsg);
-      RevenueCatService.lastError = errorMsg;
       throw error;
     }
   }
 
   // Método para verificar se há uma assinatura ativa
   hasActiveSubscription(customerInfo: CustomerInfo): boolean {
-    try {
-      console.log('RevenueCat: Checking active subscription...');
-      const entitlement = customerInfo.entitlements.active[REVENUECAT_CONFIG.ENTITLEMENT_ID];
-      if (!entitlement) {
-        console.log('RevenueCat: No active entitlement found');
-        return false;
-      }
-      if (!entitlement.expirationDate) {
-        console.log('RevenueCat: Entitlement has no expiration date (lifetime)');
-        return true;
-      }
-      const isActive = new Date(entitlement.expirationDate) > new Date();
-      console.log('RevenueCat: Subscription active status:', isActive);
-      return isActive;
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.error('RevenueCat: Failed to check active subscription:', errorMsg);
-      RevenueCatService.lastError = errorMsg;
-      return false;
-    }
-  }
-
-  // Método para adicionar listener de mudanças no customer info
-  addCustomerInfoUpdateListener(listener: () => void) {
-    try {
-      console.log('RevenueCat: Adding customer info update listener');
-      return Purchases.addCustomerInfoUpdateListener(listener);
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.error('RevenueCat: Failed to add customer info listener:', errorMsg);
-      RevenueCatService.lastError = errorMsg;
-      return null;
-    }
-  }
-
-  // Método para verificar status premium facilmente
-  async checkPremiumStatus(): Promise<boolean> {
-    try {
-      console.log('RevenueCat: Checking premium status...');
-      const customerInfo = await this.getCustomerInfo();
-      const isPremium = this.isPremium(customerInfo);
-      console.log('RevenueCat: Premium status result:', isPremium);
-      return isPremium;
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.error('RevenueCat: Failed to check premium status:', errorMsg);
-      RevenueCatService.lastError = errorMsg;
-      return false;
-    }
+    const entitlement = customerInfo.entitlements.active[REVENUECAT_CONFIG.ENTITLEMENT_ID];
+    if (!entitlement) return false;
+    if (!entitlement.expirationDate) return true;
+    return new Date(entitlement.expirationDate) > new Date();
   }
 }
 

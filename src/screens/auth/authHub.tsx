@@ -15,26 +15,26 @@ export default function AuthHub() {
     <View style={Styles.container}>
       <View style={Styles.main}>
         <Image source={require('../../../assets/images/logo2.png')} style={Styles.logo} />
-        <Text style={Styles.title}>Crie a sua conta</Text>
+        <Text style={Styles.title}>Create your account</Text>
         <TouchableOpacity 
           style={Styles.button}
           onPress={() => navigation.navigate('SignUp')}
         >
-          <Text style={Styles.buttonText}>Continuar com email e senha</Text>
+          <Text style={Styles.buttonText}>Continue with email and password</Text>
         </TouchableOpacity>
         {/*<View style={Styles.iconContainer}>
           <Ionicons name="logo-facebook" style={Styles.icon}/>
           <Ionicons name="logo-apple" style={Styles.icon}/>
           <Ionicons name="logo-google" style={Styles.icon}/>
         </View>*/}
-        <Text style={Styles.text}>Já tem uma conta? <Text style={Styles.textBold } onPress={() => navigation.navigate('Login')}>Faça login</Text></Text>
+        <Text style={Styles.text}>Already have an account? <Text style={Styles.textBold } onPress={() => navigation.navigate('Login')}>Sign in</Text></Text>
       </View>
       <Text style={Styles.textRodape}>
-        Ao continuar, você aceita os{' '}
-        <Text style={[Styles.textRodapeBold, {textDecorationLine: 'underline'}]} onPress={() => Linking.openURL('https://zenity.hnoapps.com/politica-de-privacidade/')}>Termos e Condições</Text>
-        {' '}e a{' '}
-        <Text style={[Styles.textRodapeBold, {textDecorationLine: 'underline'}]} onPress={() => Linking.openURL('https://zenity.hnoapps.com/politica-de-privacidade/')}>Política de Privacidade</Text>
-        {' '}da Zenity
+        By continuing, you accept the{' '}
+        <Text style={[Styles.textRodapeBold, {textDecorationLine: 'underline'}]} onPress={() => Linking.openURL('https://zenity.hnoapps.com/politica-de-privacidade/')}>Terms and Conditions</Text>
+        {' '}and the{' '}
+        <Text style={[Styles.textRodapeBold, {textDecorationLine: 'underline'}]} onPress={() => Linking.openURL('https://zenity.hnoapps.com/politica-de-privacidade/')}>Privacy Policy</Text>
+        {' '}of Zenity
       </Text>
     </View>
   );

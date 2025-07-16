@@ -68,7 +68,7 @@ export default function ModuleDetail() {
   if (!module) {
     return (
       <View style={Styles.container}>
-        <Text style={Styles.errorText}>Erro: Módulo não encontrado</Text>
+        <Text style={Styles.errorText}>Error: Module not found</Text>
       </View>
     );
   }

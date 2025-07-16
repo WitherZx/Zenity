@@ -11,8 +11,8 @@ interface AdBannerProps {
 export const AdBanner: React.FC<AdBannerProps> = ({ 
   size = BannerAdSize.ADAPTIVE_BANNER,
   unitId = Platform.OS === 'ios'
-    ? 'ca-app-pub-5233713899126724/7013667699'
-    : 'ca-app-pub-5233713899126724/7862480433',
+    ? 'ca-app-pub-5233713899126724/4039357287' 
+    : 'ca-app-pub-5233713899126724/4039357287',
   testMode = false
 }) => {
   const adUnitId = testMode ? TestIds.BANNER : unitId;

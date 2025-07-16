@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native";
 import { Ionicons as Icon } from '@expo/vector-icons';
 import ModulesGrid from "../components/modulesGrid";
 import { useAuth } from "../contexts/AuthContext";
 import { fonts } from "../theme/fonts";
+import { supabase } from '../config/supabase';
 import { AdBanner } from '../components/AdBanner';
 import { BannerAdSize } from 'react-native-google-mobile-ads';
 
@@ -21,18 +22,36 @@ const formatUserName = (firstName?: string, lastName?: string) => {
 };
 
 export default function Home() {
-    const { userData, loading } = useAuth();
+    const { user: authUser } = useAuth();
+    const [userData, setUserData] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchProfile() {
+            if (authUser?.id) {
+                const { data } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', authUser.id)
+                    .single();
+                setUserData(data);
+            }
+            setLoading(false);
+        }
+        fetchProfile();
+    }, [authUser]);
 
     if (loading || !userData) {
         return (
             <View style={styles.container}>
-                <Text style={styles.adText}>Carregando...</Text>
+                <Text style={styles.adText}>Loading...</Text>
             </View>
         );
     }
 
     return (
         <View style={styles.container}>
+            {/* Só mostra anúncios se o usuário não for premium */}
             {!userData?.is_premium && (
                 <View>
                     <AdBanner 
@@ -46,7 +65,7 @@ export default function Home() {
             )}
             <View style={styles.helloContainer}>
                 <Text style={styles.helloText}>
-                    Olá, <Text style={styles.helloName}>{formatUserName(userData?.first_name ?? '', userData?.last_name ?? '')}</Text>
+                    Hello, <Text style={styles.helloName}>{formatUserName(userData?.first_name ?? '', userData?.last_name ?? '')}</Text>
                 </Text>
                 {userData?.is_premium ? (
                     <Icon name="diamond" color={'#fff'} size={20}/>
@@ -56,7 +75,7 @@ export default function Home() {
                     </TouchableOpacity>
                 )}
             </View>
-            <Text style={styles.title}>Módulos</Text>
+            <Text style={styles.title}>Modules</Text>
             <ModulesGrid/>
         </View>
     )

@@ -73,7 +73,7 @@ export default function ModulesGrid() {
   }, []);
 
   if (loading) return <ModulesGridSkeleton />;
-  if (!modules || modules.length === 0) return <Text>Nenhum módulo encontrado.</Text>;
+  if (!modules || modules.length === 0) return <Text style={styles.noModulesText}>No modules found.</Text>;
 
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
@@ -122,5 +122,8 @@ const styles = StyleSheet.create({
     width: '70%',
     backgroundColor: '#fff',
     borderRadius: 4,
+  },
+  noModulesText: {
+    color: '#fff',
   },
 });
