@@ -42,6 +42,7 @@ export default function TabsNav() {
     return (
       <View style={{ flex: 1 }}>
         <Tabs.Navigator
+          id={undefined}
           screenOptions={({ route }) => ({
             ...tabScreenOptions,
             tabBarShowLabel: false,
@@ -86,10 +87,11 @@ export default function TabsNav() {
     );
   }
 
-  // Navegador para usuários não-premium (com aba Premium)
+  // Navegador para usuários não-premium (sem aba Premium)
   return (
     <View style={{ flex: 1 }}>
       <Tabs.Navigator
+        id={undefined}
         screenOptions={({ route }) => ({
           ...tabScreenOptions,
           tabBarShowLabel: false,
@@ -128,13 +130,6 @@ export default function TabsNav() {
         <Tabs.Screen name="Home" component={HomeStack} />
         <Tabs.Screen name="My Account" component={AccountStack} />
         <Tabs.Screen name="Search" component={SearchStack} />
-        <Tabs.Screen name="Premium" component={require('../stacks/premiumStack').default}
-          options={{
-            tabBarIcon: ({ focused, color }) => (
-              <Ionicons name={focused ? 'diamond' : 'diamond-outline'} size={25} color={color} />
-            ),
-          }}
-        />
       </Tabs.Navigator>
       <FloatingPlayer />
     </View>

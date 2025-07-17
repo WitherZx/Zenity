@@ -233,14 +233,6 @@ const MyAccount: React.FC = () => {
       <Text style={styles.name}>{userData?.first_name ?? ''} {userData?.last_name ?? ''}</Text>
       </View>
       <View>
-        {/* Só mostra o botão de assinar premium se o usuário não for premium */}
-        {!userData?.is_premium && (
-          <CustomButton 
-            text="Subscribe to Premium" 
-            iconName="diamond" 
-            onPress={() => navigation.navigate('Premium')} 
-          />
-        )}
         <CustomButton 
           text="Edit data" 
           iconName="user" 
