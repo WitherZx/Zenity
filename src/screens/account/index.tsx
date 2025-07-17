@@ -233,15 +233,8 @@ const MyAccount: React.FC = () => {
       <Text style={styles.name}>{userData?.first_name ?? ''} {userData?.last_name ?? ''}</Text>
       </View>
       <View>
-        {!userData?.is_premium && (
-          <CustomButton 
-            text="Assinar Premium" 
-            iconName="diamond" 
-            onPress={() => navigation.navigate('Premium')} 
-          />
-        )}
         <CustomButton 
-          text="Editar dados" 
+          text="Edit data" 
           iconName="user" 
           onPress={() => navigation.navigate('EditAccount', { currentUserData: userData })} 
         />
