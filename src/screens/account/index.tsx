@@ -234,7 +234,7 @@ const MyAccount: React.FC = () => {
       </View>
       <View>
         <CustomButton 
-          text="Edit data" 
+          text="Editar dados" 
           iconName="user" 
           onPress={() => navigation.navigate('EditAccount', { currentUserData: userData })} 
         />
