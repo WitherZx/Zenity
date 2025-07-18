@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from "react-native";
 import { Ionicons as Icon } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import ModulesGrid from "../components/modulesGrid";
 import { useAuth } from "../contexts/AuthContext";
 import { fonts } from "../theme/fonts";
@@ -21,12 +22,13 @@ const formatUserName = (firstName?: string, lastName?: string) => {
 };
 
 export default function Home() {
+    const { t } = useTranslation();
     const { userData, loading } = useAuth();
 
     if (loading || !userData) {
         return (
             <View style={styles.container}>
-                <Text style={styles.adText}>Carregando...</Text>
+                <Text style={styles.adText}>{t('home.loading')}</Text>
             </View>
         );
     }
@@ -46,7 +48,7 @@ export default function Home() {
             )}
             <View style={styles.helloContainer}>
                 <Text style={styles.helloText}>
-                    Olá, <Text style={styles.helloName}>{formatUserName(userData?.first_name ?? '', userData?.last_name ?? '')}</Text>
+                    {t('home.hello')}, <Text style={styles.helloName}>{formatUserName(userData?.first_name ?? '', userData?.last_name ?? '')}</Text>
                 </Text>
                 {userData?.is_premium ? (
                     <Icon name="diamond" color={'#fff'} size={20}/>
@@ -56,7 +58,7 @@ export default function Home() {
                     </TouchableOpacity>
                 )}
             </View>
-            <Text style={styles.title}>Módulos</Text>
+            <Text style={styles.title}>{t('home.modules')}</Text>
             <ModulesGrid/>
         </View>
     )

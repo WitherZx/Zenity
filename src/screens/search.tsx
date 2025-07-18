@@ -2,12 +2,14 @@ import React from "react";
 import { View, StyleSheet, Text, TextInput, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 import ContentGrid from "../components/contentGrid";
 import { Content } from "../components/contentGrid";
 import ContentGridSkeleton from "../components/ContentGridSkeleton";
 import { getModules } from "../data/modulesData";
 
 export default function Search() {
+    const { t } = useTranslation();
     const [searchText, setSearchText] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
@@ -76,7 +78,7 @@ export default function Search() {
             return (
                 <View style={styles.noResultsContainer}>
                     <Ionicons name="search-outline" size={50} color="#fff" />
-                    <Text style={styles.noResultsText}>Nenhum conteúdo foi encontrado</Text>
+                    <Text style={styles.noResultsText}>{t('search.noContentFound')}</Text>
                 </View>
             );
         }
@@ -94,14 +96,14 @@ export default function Search() {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Pesquisar</Text>
+            <Text style={styles.title}>{t('search.title')}</Text>
             <View style={styles.searchContainer}>
                 <TouchableOpacity onPress={handleSearch}>
                     <Ionicons name="search" size={24} color="#0097B2" style={styles.icon} />
                 </TouchableOpacity>
                 <TextInput
                     style={styles.search}
-                    placeholder="Digite..."
+                    placeholder={t('search.searchPlaceholder')}
                     placeholderTextColor="#0097B2"
                     value={searchText}
                     onChangeText={handleChangeText}

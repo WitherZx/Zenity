@@ -2,39 +2,71 @@ import React from 'react';
 import { View, StyleSheet, Image, Text, TouchableOpacity, Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useTranslation } from 'react-i18next';
 import { LoginStackParamList } from '../../stacks/loginStack';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { fonts } from '../../theme/fonts';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getPrivacyPolicyUrl, getTermsOfServiceUrl } from '../../config/urls';
 
 type NavigationProp = StackNavigationProp<LoginStackParamList>;
 
 export default function AuthHub() {
   const navigation = useNavigation<NavigationProp>();
+  const { t } = useTranslation();
+  const { resetLanguageSelection, currentLanguage } = useLanguage();
+
+  const handleLanguageChange = () => {
+    // Limpa a seleção de idioma para forçar nova seleção
+    AsyncStorage.removeItem('selectedLanguage');
+    AsyncStorage.removeItem('selectedRegion');
+    
+    // Força recarregamento do contexto de idioma
+    resetLanguageSelection();
+  };
 
   return (
     <View style={Styles.container}>
       <View style={Styles.main}>
         <Image source={require('../../../assets/images/logo2.png')} style={Styles.logo} />
-        <Text style={Styles.title}>Crie a sua conta</Text>
+        <Text style={Styles.title}>{t('auth.createAccount')}</Text>
         <TouchableOpacity 
           style={Styles.button}
           onPress={() => navigation.navigate('SignUp')}
         >
-          <Text style={Styles.buttonText}>Continuar com email e senha</Text>
+          <Text style={Styles.buttonText}>{t('auth.continueWithEmail')}</Text>
         </TouchableOpacity>
         {/*<View style={Styles.iconContainer}>
           <Ionicons name="logo-facebook" style={Styles.icon}/>
           <Ionicons name="logo-apple" style={Styles.icon}/>
           <Ionicons name="logo-google" style={Styles.icon}/>
         </View>*/}
-        <Text style={Styles.text}>Já tem uma conta? <Text style={Styles.textBold } onPress={() => navigation.navigate('Login')}>Faça login</Text></Text>
+        <Text style={Styles.text}>
+          {t('auth.alreadyHaveAccount')}{' '}
+          <Text style={Styles.textBold} onPress={() => navigation.navigate('Login')}>
+            {t('auth.login')}
+          </Text>
+        </Text>
+        
+        {/* Botão para voltar à seleção de idioma */}
+        <TouchableOpacity 
+          style={Styles.languageButton}
+          onPress={handleLanguageChange}
+        >
+          <Text style={Styles.languageButtonText}>{t('auth.changeLanguage')}</Text>
+        </TouchableOpacity>
       </View>
       <Text style={Styles.textRodape}>
-        Ao continuar, você aceita os{' '}
-        <Text style={[Styles.textRodapeBold, {textDecorationLine: 'underline'}]} onPress={() => Linking.openURL('https://zenity.hnoapps.com/politica-de-privacidade/')}>Termos e Condições</Text>
-        {' '}e a{' '}
-        <Text style={[Styles.textRodapeBold, {textDecorationLine: 'underline'}]} onPress={() => Linking.openURL('https://zenity.hnoapps.com/politica-de-privacidade/')}>Política de Privacidade</Text>
-        {' '}da Zenity
+        {t('auth.acceptTerms')}{' '}
+        <Text style={[Styles.textRodapeBold, {textDecorationLine: 'underline'}]} onPress={() => Linking.openURL(getTermsOfServiceUrl(currentLanguage))}>
+          {t('auth.termsAndConditions')}
+        </Text>
+        {' '}{t('auth.and')}{' '}
+        <Text style={[Styles.textRodapeBold, {textDecorationLine: 'underline'}]} onPress={() => Linking.openURL(getPrivacyPolicyUrl(currentLanguage))}>
+          {t('auth.privacyPolicy')}
+        </Text>
+        {' '}{t('auth.ofZenity')}
       </Text>
     </View>
   );
@@ -95,6 +127,18 @@ const Styles = StyleSheet.create({
   textBold: {
     fontFamily: fonts.bold,
     fontWeight: 'bold',
+  },
+  languageButton: {
+    marginTop: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 20,
+  },
+  languageButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontFamily: fonts.medium,
   },
   textRodape: {
     color: '#fff',

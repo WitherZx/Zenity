@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
+import { I18nextProvider } from 'react-i18next';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { PlayerProvider } from './src/contexts/PlayerContext';
+import { LanguageProvider } from './src/contexts/LanguageContext';
 import Navigation from './src/navigation';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Font from 'expo-font';
 import mobileAds, { MaxAdContentRating } from 'react-native-google-mobile-ads';
 import RevenueCatService from './src/services/revenueCatService';
+import i18n from './src/config/i18n'; // Importar i18n configurado
+import { testSupabaseConnection, testAuthListener } from './src/utils/supabaseTest';
 
 // Mantenha a splash screen visível enquanto carregamos recursos
 SplashScreen.preventAutoHideAsync();
@@ -37,6 +41,24 @@ export default function App() {
           await revenueCatService.initialize();
         } catch (rcError) {
           // Não falha o app se o RevenueCat não inicializar
+        }
+
+        // Teste de conectividade do Supabase
+        try {
+          console.log('[APP] Testando conectividade do Supabase...');
+          const supabaseTest = await testSupabaseConnection();
+          console.log('[APP] Teste do Supabase:', supabaseTest);
+        } catch (supabaseError) {
+          console.error('[APP] Erro no teste do Supabase:', supabaseError);
+        }
+
+        // Teste do listener de autenticação
+        try {
+          console.log('[APP] Testando listener de autenticação...');
+          const authListenerTest = await testAuthListener();
+          console.log('[APP] Teste do listener de autenticação:', authListenerTest);
+        } catch (authListenerError) {
+          console.error('[APP] Erro no teste do listener de autenticação:', authListenerError);
         }
 
         // Carrega as fontes
@@ -75,12 +97,16 @@ export default function App() {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <AuthProvider>
-        <PlayerProvider>
-          <Navigation />
-        </PlayerProvider>
-      </AuthProvider>
-    </View>
+    <I18nextProvider i18n={i18n}>
+      <View style={{ flex: 1 }}>
+        <LanguageProvider>
+          <AuthProvider>
+            <PlayerProvider>
+              <Navigation />
+            </PlayerProvider>
+          </AuthProvider>
+        </LanguageProvider>
+      </View>
+    </I18nextProvider>
   );
 }

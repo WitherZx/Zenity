@@ -1,7 +1,12 @@
+import { Alert, Linking } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
 const handleEmailSupport = () => {
+  const { t } = useTranslation();
+  
   const email = 'suporte@hnospps.com';
-  const subject = 'Solicitação de Deletar Conta';
-  const body = 'Olá, gostaria de deletar minha conta no app Zenity. Por favor, me ajude com o processo.';
+  const subject = t('account.deleteAccountRequest');
+  const body = t('account.deleteAccountEmailBody');
   
   const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   
@@ -10,8 +15,8 @@ const handleEmailSupport = () => {
       Linking.openURL(mailtoUrl);
     } else {
       Alert.alert(
-        'Email não disponível',
-        'Por favor, envie um email para suporte@hnospps.com com o assunto "Solicitação de Deletar Conta"'
+        t('account.emailNotAvailable'),
+        t('account.emailNotAvailableMessage')
       );
     }
   });

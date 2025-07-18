@@ -43,17 +43,38 @@ class RevenueCatService {
     return this.lastError;
   }
 
-  async initialize(userId?: string): Promise<void> {
-    if (this.isInitialized) {
-      console.log('RevenueCat: Already initialized');
-      return;
-    }
+  async initialize(userId?: string, region?: 'brazil' | 'usa'): Promise<void> {
     try {
-      console.log('RevenueCat: Initializing with userId:', userId || 'anonymous');
-      await Purchases.configure({
+      console.log('RevenueCat: Initializing with userId:', userId || 'anonymous', 'region:', region);
+      
+      // Verificar se já está inicializado e é o mesmo usuário
+      if (this.isInitialized && userId) {
+        try {
+          const customerInfo = await Purchases.getCustomerInfo();
+          if (customerInfo.originalAppUserId === userId) {
+            console.log('RevenueCat: Already initialized with same user');
+            return;
+          }
+        } catch (error) {
+          // Se não conseguir verificar, continuar com a inicialização
+        }
+      }
+      
+      // Configurar RevenueCat
+      const config: any = {
         apiKey: Platform.OS === 'ios' ? REVENUECAT_API_KEYS.ios : REVENUECAT_API_KEYS.android,
         appUserID: userId,
-      });
+      };
+      
+      // Se uma região específica foi fornecida, configurar
+      if (region) {
+        config.observerMode = false;
+        // RevenueCat usa a região da App Store/Google Play, mas podemos forçar algumas configurações
+        console.log('RevenueCat: Configuring for region:', region);
+      }
+      
+      await Purchases.configure(config);
+      
       Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
       this.isInitialized = true;
       RevenueCatService.lastError = null;
@@ -63,6 +84,35 @@ class RevenueCatService {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       RevenueCatService.lastError = errorMsg;
       console.error('RevenueCat: Initialization failed:', errorMsg);
+      throw error;
+    }
+  }
+
+  // Método para reinicializar (útil quando troca de região)
+  async reinitialize(region?: 'brazil' | 'usa'): Promise<void> {
+    try {
+      console.log('RevenueCat: Reinitializing for region:', region);
+      
+      // Primeiro, fazer logout se necessário
+      try {
+        await Purchases.logOut();
+      } catch (error) {
+        // Ignorar erros de logout (usuário anônimo)
+      }
+      
+      // Aguardar um pouco antes de reconfigurar
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Marcar como não inicializado
+      this.isInitialized = false;
+      
+      // Reconfigurar com região específica
+      await this.initialize(undefined, region);
+      
+      console.log('RevenueCat: Reinitialization completed');
+    } catch (error) {
+      console.error('RevenueCat: Reinitialization failed:', error);
+      this.isInitialized = false;
       throw error;
     }
   }
@@ -213,14 +263,34 @@ class RevenueCatService {
   async logout(): Promise<void> {
     try {
       console.log('RevenueCat: Logging out...');
+      
+      // Verificar se o usuário atual é anônimo antes de tentar logout
+      try {
+        const customerInfo = await Purchases.getCustomerInfo();
+        if (customerInfo.originalAppUserId === '$RCAnonymousID:') {
+          console.log('RevenueCat: User is already anonymous, skipping logout');
+          return;
+        }
+      } catch (error) {
+        console.log('RevenueCat: Could not check user status, proceeding with logout');
+      }
+      
       await Purchases.logOut();
       console.log('RevenueCat: Successfully logged out');
       RevenueCatService.lastError = null;
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      
+      // Se o erro for sobre usuário anônimo, não é um erro real
+      if (errorMsg.includes('anonymous') || errorMsg.includes('Anonymous') || errorMsg.includes('logOut but the current user is anonymous')) {
+        console.log('RevenueCat: User is anonymous, logout not needed');
+        RevenueCatService.lastError = null;
+        return;
+      }
+      
       console.error('RevenueCat: Failed to logout:', errorMsg);
       RevenueCatService.lastError = errorMsg;
-      throw error;
+      // Não throw error para não quebrar o fluxo
     }
   }
 
@@ -271,6 +341,14 @@ class RevenueCatService {
       return isPremium;
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      
+      // Se o erro for sobre usuário anônimo, retornar false sem erro
+      if (errorMsg.includes('anonymous') || errorMsg.includes('Anonymous')) {
+        console.log('RevenueCat: User is anonymous, premium status is false');
+        RevenueCatService.lastError = null;
+        return false;
+      }
+      
       console.error('RevenueCat: Failed to check premium status:', errorMsg);
       RevenueCatService.lastError = errorMsg;
       return false;

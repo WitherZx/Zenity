@@ -11,6 +11,22 @@ export const REVENUECAT_CONFIG = {
   
   // Nome do offering principal
   OFFERING_ID: 'default',
+  
+  // Configurações por região
+  REGIONS: {
+    brazil: {
+      currency: 'BRL',
+      symbol: 'R$',
+      fallbackPrice: 'R$ 19,90/semana',
+      period: 'semana'
+    },
+    usa: {
+      currency: 'USD',
+      symbol: '$',
+      fallbackPrice: '$4.99/week',
+      period: 'week'
+    }
+  }
 };
 
 // Função para verificar se um produto é de assinatura
