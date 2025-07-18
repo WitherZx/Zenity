@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigationState } from '@react-navigation/native';
@@ -54,23 +54,23 @@ export default function TabNavigator() {
             zIndex: 0,
             display: isInPlayer() ? 'none' : 'flex',
           },
-          tabBarIcon: ({ focused, color }) => {
-            let iconName: string = '';
+                  tabBarIcon: ({ focused, color }) => {
+          let iconName: string = '';
 
-            if (route.name === t('tabs.home')) {
-              iconName = focused ? 'home' : 'home-outline';
-            } else if (route.name === t('tabs.search')) {
-              iconName = focused ? 'search' : 'search-outline';
-            } else if (route.name === t('tabs.premium')) {
-              iconName = focused ? 'diamond' : 'diamond-outline';
-            } else if (route.name === t('tabs.account')) {
-              iconName = focused ? 'person' : 'person-outline';
-            } else {
-              iconName = 'help-circle-outline';
-            }
+          if (route.name === t('tabs.home')) {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === t('tabs.search')) {
+            iconName = focused ? 'search' : 'search-outline';
+          } else if (route.name === t('tabs.premium') && Platform.OS === 'android') {
+            iconName = focused ? 'diamond' : 'diamond-outline';
+          } else if (route.name === t('tabs.account')) {
+            iconName = focused ? 'person' : 'person-outline';
+          } else {
+            iconName = 'help-circle-outline';
+          }
 
-            return <Ionicons name={iconName as any} size={25} color={color} />;
-          },
+          return <Ionicons name={iconName as any} size={25} color={color} />;
+        },
           tabBarActiveTintColor: '#0097B2',
           tabBarInactiveTintColor: '#91D2DE',
         })}
@@ -79,7 +79,9 @@ export default function TabNavigator() {
         <Tab.Screen name={t('tabs.home')} component={HomeStack} />
         <Tab.Screen name={t('tabs.search')} component={SearchStack} />
         <Tab.Screen name={t('tabs.account')} component={AccountStack} />
-        <Tab.Screen name={t('tabs.premium')} component={PremiumStack} />
+        {Platform.OS === 'android' && (
+          <Tab.Screen name={t('tabs.premium')} component={PremiumStack} />
+        )}
       </Tab.Navigator>
       <FloatingPlayer />
     </View>

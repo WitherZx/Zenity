@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, StyleSheet, Image, Text, TouchableOpacity, Animated, Alert, TextInput, Modal } from 'react-native';
+import { View, StyleSheet, Image, Text, TouchableOpacity, Animated, Alert, TextInput, Modal, Platform } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
@@ -240,11 +240,13 @@ const MyAccount: React.FC = () => {
           iconName="user" 
           onPress={() => navigation.navigate('EditAccount', { currentUserData: userData })} 
         />
-        <CustomButton 
-          text={t('account.subscribePremium')} 
-          iconName="diamond" 
-          onPress={() => navigation.navigate('Premium' as any)} 
-        />
+        {Platform.OS === 'android' && (
+          <CustomButton 
+            text={t('account.subscribePremium')} 
+            iconName="diamond" 
+            onPress={() => navigation.navigate('Premium' as any)} 
+          />
+        )}
         <CustomButton 
           text={t('account.logout')} 
           iconName="sign-out" 
