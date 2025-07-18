@@ -33,7 +33,21 @@ export default function Premium() {
     const regionConfig = REVENUECAT_CONFIG.REGIONS[region];
     
     console.log('Premium: Current language:', currentLanguage, 'Region:', region);
+    console.log('Premium: Region config:', regionConfig);
     
+    // FORÇAR uso do preço correto baseado no idioma
+    if (currentLanguage === 'en') {
+      // Para inglês, SEMPRE usar preço em dólar
+      console.log('Premium: Language is EN, forcing USD price:', regionConfig.fallbackPrice);
+      return regionConfig.fallbackPrice;
+    } else {
+      // Para português, usar preço em real
+      console.log('Premium: Language is PT, using BRL price:', regionConfig.fallbackPrice);
+      return regionConfig.fallbackPrice;
+    }
+    
+    // Código abaixo comentado temporariamente para forçar uso dos preços corretos
+    /*
     if (weeklyPackage?.product?.priceString) {
       // Se o preço já vem formatado do RevenueCat, usa ele
       const priceString = weeklyPackage.product.priceString;
@@ -72,6 +86,7 @@ export default function Premium() {
     // Fallback baseado na região
     console.log('Premium: No price from RevenueCat, using fallback:', regionConfig.fallbackPrice);
     return regionConfig.fallbackPrice;
+    */
   };
 
   // ADICIONAR proteção no início do componente
