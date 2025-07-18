@@ -1,16 +1,19 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { AppState } from 'react-native';
-import { supabase } from '../config/supabase';
+import { getSupabaseClient } from '../config/supabase';
 import RevenueCatService from '../services/revenueCatService';
+import { useTranslation } from 'react-i18next';
 
 interface AuthContextData {
   user: any;
   userData: any;
   loading: boolean;
   signOut: () => Promise<void>;
+  clearAuthState: () => Promise<void>;
   updatePremiumStatus: (isPremium: boolean) => Promise<void>;
   deleteAccount: (password: string) => Promise<{ success: boolean; error?: string }>;
   refreshPremiumStatus: () => Promise<void>;
+  forceRefreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextData>({
@@ -18,9 +21,11 @@ const AuthContext = createContext<AuthContextData>({
   userData: null,
   loading: true,
   signOut: async () => {},
+  clearAuthState: async () => {},
   updatePremiumStatus: async () => {},
   deleteAccount: async () => ({ success: false }),
   refreshPremiumStatus: async () => {},
+  forceRefreshUser: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -30,35 +35,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [revenueCatPremium, setRevenueCatPremium] = useState<boolean | null>(null);
   const [revenueCatLoading, setRevenueCatLoading] = useState(true);
   const revenueCatService = RevenueCatService.getInstance();
+  const { t } = useTranslation();
 
   // MÉTODO PARA SINCRONIZAR STATUS
   const refreshPremiumStatus = async () => {
-    console.log('AuthContext: Starting refreshPremiumStatus...');
     try {
+      const supabase = getSupabaseClient();
       const isAvailable = await RevenueCatService.isServiceAvailable();
       if (isAvailable) {
-        console.log('AuthContext: RevenueCat is available, checking status...');
         const rcStatus = await revenueCatService.checkPremiumStatus();
-        console.log('AuthContext: RevenueCat premium status:', rcStatus);
         setRevenueCatPremium(rcStatus);
         
         // Sincronizar com Supabase se diferente
         if (userData && rcStatus !== userData.is_premium) {
-          console.log('AuthContext: Syncing status with Supabase...');
           await supabase
             .from('users')
             .update({ is_premium: rcStatus })
             .eq('id', userData.id);
           
           setUserData((prev: any) => prev ? { ...prev, is_premium: rcStatus } : null);
-          console.log('AuthContext: Status synchronized with Supabase');
         }
       } else {
-        console.log('AuthContext: RevenueCat not available, keeping current status');
         setRevenueCatPremium(null);
       }
     } catch (error) {
-      console.log('AuthContext: Failed to refresh premium status:', error);
       setRevenueCatPremium(null);
     } finally {
       setRevenueCatLoading(false);
@@ -74,12 +74,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Timeout de segurança para liberar o loading
+    const loadingTimeout = setTimeout(() => {
+      console.log('[AUTH] Timeout de segurança - liberando loading');
+      setLoading(false);
+    }, 10000); // 10 segundos
+
     try {
+      const supabase = getSupabaseClient();
+      console.log('[AUTH] Buscando perfil do usuário:', authUser.id);
+      
       // Inicializa o RevenueCat com o ID do usuário (com tratamento de erro)
       try {
         await revenueCatService.initialize(authUser.id);
+        console.log('[AUTH] RevenueCat inicializado para:', authUser.id);
       } catch (rcError) {
-        console.log('AuthContext: RevenueCat initialization failed, continuing without it');
+        console.log('[AUTH] RevenueCat initialization failed, continuing without it');
       }
 
       // Busca o perfil completo do Supabase
@@ -88,6 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select('*')
         .eq('id', authUser.id)
         .single();
+      console.log('[AUTH] Dados do perfil carregados:', data);
 
       // Verifica se a conta foi deletada
       if (data && data.first_name === 'Conta Deletada') {
@@ -96,32 +107,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUserData(null);
         setRevenueCatPremium(null);
         setLoading(false);
+        clearTimeout(loadingTimeout);
         return;
       }
 
       // Define dados do usuário primeiro
       setUser(authUser);
       setUserData(data);
-
+      // Só libera o loading após tudo
       setLoading(false);
+      clearTimeout(loadingTimeout);
+      console.log('[AUTH] Perfil e estado definidos, loading liberado');
     } catch (error) {
+      console.error('[AUTH] Erro ao buscar perfil:', error);
       // Em caso de erro, ainda define o usuário básico
       setUser(authUser);
       setUserData({ ...authUser, is_premium: false });
       setLoading(false);
+      clearTimeout(loadingTimeout);
     }
   }
 
   // USEEFFECT PARA LISTENERS
   useEffect(() => {
     if (userData) {
-      console.log('AuthContext: Setting up RevenueCat listeners for user:', userData.id);
       refreshPremiumStatus();
 
       // Listener para mudanças no RevenueCat
       const customerInfoListener = revenueCatService.addCustomerInfoUpdateListener(
         () => {
-          console.log('AuthContext: RevenueCat customer info updated, refreshing status...');
           refreshPremiumStatus();
         }
       );
@@ -129,13 +143,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Listener para AppState
       const appStateListener = AppState.addEventListener('change', (nextAppState) => {
         if (nextAppState === 'active') {
-          console.log('AuthContext: App became active, refreshing premium status...');
           refreshPremiumStatus();
         }
       });
 
       return () => {
-        console.log('AuthContext: Cleaning up listeners...');
         try {
           if (customerInfoListener) {
             (customerInfoListener as any)?.remove?.();
@@ -159,7 +171,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!userData) return;
 
     try {
-      console.log('AuthContext: Updating premium status to:', isPremium);
+      const supabase = getSupabaseClient();
       // Atualiza o status no Supabase
       const { error } = await supabase
         .from('users')
@@ -170,39 +182,98 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Atualiza o estado local
       setUserData((prev: any) => ({ ...prev, is_premium: isPremium }));
-      console.log('AuthContext: Premium status updated successfully');
     } catch (error) {
       console.error('AuthContext: Failed to update premium status:', error);
     }
   };
 
   useEffect(() => {
-    // Checa o usuário atual ao iniciar
-    const session = supabase.auth.session();
-    fetchUserProfile(session?.user ?? null);
+    const supabase = getSupabaseClient();
+    
+    // Obter sessão inicial
+    const getInitialSession = async () => {
+      try {
+        const session = supabase.auth.session();
+        console.log('[AUTH] Sessão inicial:', session?.user?.id || 'null');
+        fetchUserProfile(session?.user ?? null);
+      } catch (error) {
+        console.error('[AUTH] Erro ao obter sessão inicial:', error);
+        fetchUserProfile(null);
+      }
+    };
+    
+    getInitialSession();
 
     // Listener para mudanças de autenticação
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      fetchUserProfile(session?.user ?? null);
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('[AUTH] AuthStateChange event:', event, 'user:', session?.user?.id || 'null');
+      
+      // Forçar atualização imediata do estado
+      if (event === 'SIGNED_IN' && session?.user) {
+        console.log('[AUTH] Usuário logado, atualizando estado...');
+        fetchUserProfile(session.user);
+      } else if (event === 'SIGNED_OUT') {
+        console.log('[AUTH] Usuário deslogado, limpando estado...');
+        setUser(null);
+        setUserData(null);
+        setRevenueCatPremium(null);
+        setLoading(false);
+      } else {
+        fetchUserProfile(session?.user ?? null);
+      }
     });
 
     return () => {
+      console.log('[AUTH] Cleanup listener');
       listener?.unsubscribe();
     };
   }, []);
 
+  const clearAuthState = async () => {
+    try {
+      console.log('[AUTH] Iniciando limpeza do estado...');
+      
+      // Limpar RevenueCat PRIMEIRO (antes do usuário se tornar anônimo)
+      try {
+        console.log('[AUTH] Fazendo logout do RevenueCat...');
+        await revenueCatService.logout();
+        console.log('[AUTH] Logout do RevenueCat realizado');
+        
+        // Aguardar um pouco antes de reinicializar
+        await new Promise(resolve => setTimeout(resolve, 200));
+        await revenueCatService.reinitialize();
+        console.log('[AUTH] RevenueCat reinicializado');
+      } catch (error) {
+        console.log('[AUTH] RevenueCat cleanup failed, continuing...', error);
+      }
+      
+      // Limpar Supabase DEPOIS
+      console.log('[AUTH] Fazendo logout do Supabase...');
+      const supabase = getSupabaseClient();
+      await supabase.auth.signOut();
+      console.log('[AUTH] Logout do Supabase realizado');
+      
+      // Limpar estado local por último
+      console.log('[AUTH] Limpando estado local...');
+      setUser(null);
+      setUserData(null);
+      setRevenueCatPremium(null);
+      setLoading(false);
+      console.log('[AUTH] Estado limpo com sucesso');
+      
+    } catch (error) {
+      console.error('[AUTH] Erro ao limpar estado:', error);
+      // Mesmo com erro, limpar o estado
+      setUser(null);
+      setUserData(null);
+      setRevenueCatPremium(null);
+      setLoading(false);
+    }
+  };
+
   const signOut = async () => {
     setLoading(true);
-    try {
-      await revenueCatService.logout();
-    } catch (error) {
-      // Continua mesmo se o logout do RevenueCat falhar
-    }
-    await supabase.auth.signOut();
-    setUser(null);
-    setUserData(null);
-    setRevenueCatPremium(null);
-    setLoading(false);
+    await clearAuthState();
   };
 
   const deleteAccount = async (password: string): Promise<{ success: boolean; error?: string }> => {
@@ -216,6 +287,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('deleteAccount: Usuário ID:', userData.id);
 
     try {
+      const supabase = getSupabaseClient();
       // 1. Verificar se o usuário tem assinatura ativa no RevenueCat
       console.log('deleteAccount: Verificando assinatura ativa...');
       try {
@@ -224,7 +296,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('deleteAccount: Usuário tem assinatura ativa, bloqueando exclusão');
           return { 
             success: false, 
-            error: 'Você possui uma assinatura ativa. Cancele a assinatura antes de deletar sua conta.' 
+            error: t('account.activeSubscriptionError') 
           };
         }
         console.log('deleteAccount: Nenhuma assinatura ativa encontrada');
@@ -256,7 +328,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (files && files.length > 0) {
           console.log('deleteAccount: Deletando', files.length, 'arquivos de imagem');
-          const fileNames = files.map(file => file.name);
+          const fileNames = files.map((file: any) => file.name);
           const { error: removeError } = await supabase.storage
             .from('user-images')
             .remove(fileNames);
@@ -272,7 +344,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Continua mesmo se não conseguir deletar arquivos
       }
 
-      // 4. Fazer logout do RevenueCat
+      // 4. Fazer logout do RevenueCat PRIMEIRO
       console.log('deleteAccount: Fazendo logout do RevenueCat...');
       try {
         await revenueCatService.logout();
@@ -282,6 +354,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (rcError.message && rcError.message.includes('anonymous')) {
           console.log('deleteAccount: Usuário já é anônimo no RevenueCat, continuando...');
         } else {
+          console.log('deleteAccount: Erro no logout do RevenueCat:', rcError);
         }
         // Continua mesmo se falhar
       }
@@ -300,17 +373,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .eq('id', userData.id);
         
         if (markError) {
+          console.log('deleteAccount: Erro ao marcar conta como deletada:', markError);
         } else {
           console.log('deleteAccount: Conta marcada como deletada no banco');
         }
       } catch (authError) {
+        console.log('deleteAccount: Erro ao marcar conta como deletada:', authError);
       }
 
-      // 6. Fazer logout do Supabase
+      // 6. Fazer logout do Supabase DEPOIS
       console.log('deleteAccount: Fazendo logout do Supabase...');
       const { error: signOutError } = await supabase.auth.signOut();
       
       if (signOutError) {
+        console.log('deleteAccount: Erro no logout do Supabase:', signOutError);
       } else {
         console.log('deleteAccount: Logout do Supabase realizado');
       }
@@ -334,6 +410,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const forceRefreshUser = async () => {
+    const supabase = getSupabaseClient();
+    const session = supabase.auth.session();
+    if (session?.user) {
+      fetchUserProfile(session.user);
+    } else {
+      setUser(null);
+      setUserData(null);
+      setRevenueCatPremium(null);
+      setLoading(false);
+    }
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -342,7 +431,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signOut, 
       updatePremiumStatus, 
       deleteAccount,
-      refreshPremiumStatus 
+      refreshPremiumStatus,
+      clearAuthState,
+      forceRefreshUser
     }}>
       {children}
     </AuthContext.Provider>

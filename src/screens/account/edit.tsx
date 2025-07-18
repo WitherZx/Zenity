@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useTranslation } from 'react-i18next';
 import { AccountStackParamList } from '../../stacks/accountStack';
 import { useAuth } from '../../contexts/AuthContext';
 import PageModel2 from '../../components/pageModel2';
 import { fonts } from '../../theme/fonts';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../../config/supabase';
+import { getSupabaseClient } from '../../config/supabase';
 import * as FileSystem from 'expo-file-system';
 import { Buffer } from 'buffer';
 
@@ -30,6 +31,7 @@ function base64ToBlob(base64: string, contentType = '', sliceSize = 512): Blob {
 }
 
 export default function EditAccount() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
   const { user: authUser } = useAuth();
@@ -47,6 +49,7 @@ export default function EditAccount() {
   useEffect(() => {
     async function fetchProfile() {
       if (authUser?.id) {
+        const supabase = getSupabaseClient();
         const { data } = await supabase
           .from('users')
           .select('*')
@@ -74,11 +77,12 @@ export default function EditAccount() {
 
   const pickImage = async () => {
     if (!authUser) {
-      Alert.alert('Erro', 'Usuário não autenticado.');
+      Alert.alert(t('editAccount.error'), t('editAccount.authError'));
       return;
     }
 
     try {
+      const supabase = getSupabaseClient();
       // Verifica permissão primeiro
       const { status: existingStatus } = await ImagePicker.getMediaLibraryPermissionsAsync();
       
@@ -93,10 +97,10 @@ export default function EditAccount() {
       // Se ainda não tem permissão após solicitar
       if (finalStatus !== 'granted') {
         Alert.alert(
-          'Permissão Necessária', 
-          'Para alterar sua foto de perfil, precisamos de permissão para acessar sua galeria. Você pode habilitar isso nas configurações do seu dispositivo.',
+          t('editAccount.permissionNeeded'), 
+          t('editAccount.permissionMessage'),
           [
-            { text: 'Cancelar', style: 'cancel' }
+            { text: t('editAccount.cancel'), style: 'cancel' }
           ]
         );
         return;
@@ -121,7 +125,7 @@ export default function EditAccount() {
         // Obtém o token de acesso do usuário
         const accessToken = supabase.auth.session()?.access_token || '';
         if (!accessToken) {
-          Alert.alert('Erro', 'Não foi possível obter o token de autenticação.');
+          Alert.alert(t('editAccount.error'), t('editAccount.tokenError'));
           return;
         }
         // Monta a URL de upload
@@ -136,7 +140,7 @@ export default function EditAccount() {
           uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
         });
         if (uploadResult.status !== 200 && uploadResult.status !== 201) {
-          throw new Error('Falha ao fazer upload da imagem.');
+          throw new Error(t('editAccount.uploadError'));
         }
         
         // Obtém a URL pública
@@ -158,7 +162,7 @@ export default function EditAccount() {
           .single();
           
         if (userExistsError || !userExists) {
-          Alert.alert('Erro', 'Usuário não encontrado na tabela users.');
+          Alert.alert(t('editAccount.error'), t('editAccount.userNotFound'));
           return;
         }
         
@@ -174,13 +178,13 @@ export default function EditAccount() {
         const refreshedUrl = publicUrl ? `${publicUrl}?t=${Date.now()}` : '';
         setUserImage(refreshedUrl);
         setUserData((prev: any) => ({ ...prev, profile_url: refreshedUrl }));
-        Alert.alert('Sucesso', 'Foto de perfil atualizada!');
+        Alert.alert(t('common.ok'), t('editAccount.photoUpdated'));
       }
     } catch (error: any) {
       console.error('Erro no pickImage:', error);
       Alert.alert(
-        'Erro', 
-        error.message || 'Não foi possível processar a imagem. Tente novamente.'
+        t('editAccount.error'), 
+        error.message || t('editAccount.imageError')
       );
     } finally {
       setLoading(false);
@@ -190,11 +194,12 @@ export default function EditAccount() {
   const handleSubmit = async () => {
     if (!authUser) return;
     if (!formData.firstName.trim() || !formData.lastName.trim()) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos.');
+      Alert.alert(t('editAccount.error'), t('editAccount.fillAllFields'));
       return;
     }
     setLoading(true);
     try {
+      const supabase = getSupabaseClient();
       const { data, error } = await supabase
         .from('users')
         .update({
@@ -208,10 +213,10 @@ export default function EditAccount() {
         throw error;
       }
 
-      Alert.alert('Sucesso', 'Dados atualizados com sucesso!');
+      Alert.alert(t('common.ok'), t('editAccount.dataUpdated'));
       navigation.goBack();
     } catch (error: any) {
-      Alert.alert('Erro', 'Não foi possível atualizar os dados. Tente novamente.');
+      Alert.alert(t('editAccount.error'), t('editAccount.updateError'));
     } finally {
       setLoading(false);
     }
@@ -220,7 +225,7 @@ export default function EditAccount() {
   if (profileLoading) {
     return (
       <View style={Styles.container}>
-        <Text style={Styles.label}>Carregando...</Text>
+        <Text style={Styles.label}>{t('editAccount.loading')}</Text>
       </View>
     );
   }
@@ -228,7 +233,7 @@ export default function EditAccount() {
   return (
     <PageModel2 
       icon="person-outline" 
-      title="conta" 
+      title={t('editAccount.title')} 
       subtitle={`${formData.firstName} ${formData.lastName}`}
     >
       <View style={Styles.container}>
@@ -246,7 +251,7 @@ export default function EditAccount() {
           {imageHover && !loading && (
             <View style={Styles.imageOverlay}>
               <Ionicons name="camera" size={30} color="#fff" />
-              <Text style={Styles.overlayText}>Alterar foto</Text>
+              <Text style={Styles.overlayText}>{t('editAccount.changePhoto')}</Text>
             </View>
           )}
           {loading && (
@@ -257,9 +262,9 @@ export default function EditAccount() {
         </TouchableOpacity>
         <View style={Styles.form}>
           <View style={Styles.formItem}>
-            <Text style={Styles.label}>Nome</Text>
+            <Text style={Styles.label}>{t('editAccount.firstName')}</Text>
             <TextInput 
-              placeholder="Nome" 
+              placeholder={t('editAccount.firstName')} 
               style={Styles.input}
               value={formData.firstName}
               onChangeText={(value) => handleChange('firstName', value)}
@@ -267,9 +272,9 @@ export default function EditAccount() {
             />
           </View>
           <View style={Styles.formItem}>
-            <Text style={Styles.label}>Sobrenome</Text>
+            <Text style={Styles.label}>{t('editAccount.lastName')}</Text>
             <TextInput 
-              placeholder="Sobrenome" 
+              placeholder={t('editAccount.lastName')} 
               style={Styles.input}
               value={formData.lastName}
               onChangeText={(value) => handleChange('lastName', value)}
@@ -277,9 +282,9 @@ export default function EditAccount() {
             />
           </View>
           <View style={Styles.formItem}>
-            <Text style={Styles.label}>Email</Text>
+            <Text style={Styles.label}>{t('editAccount.email')}</Text>
             <TextInput 
-              placeholder="Email" 
+              placeholder={t('editAccount.email')} 
               style={[Styles.input, { opacity: 0.5 }]}
               value={formData.email}
               editable={false}
@@ -291,7 +296,7 @@ export default function EditAccount() {
               onPress={handleSubmit}
               disabled={loading}
             >
-              <Text style={Styles.buttonText}>Salvar alterações</Text>
+              <Text style={Styles.buttonText}>{t('editAccount.saveChanges')}</Text>
             </TouchableOpacity>
           </View>
         </View>

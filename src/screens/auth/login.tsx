@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, TextInput, Image, ActivityIndicator, Alert } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useTranslation } from 'react-i18next';
 import { LoginStackParamList } from '../../stacks/loginStack';
 import { fonts } from '../../theme/fonts';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../../config/supabase';
+import { getSupabaseClient } from '../../config/supabase';
+import { useAuth } from '../../contexts/AuthContext';
 
 type NavigationProp = StackNavigationProp<LoginStackParamList>;
 
@@ -15,6 +17,8 @@ type FormData = {
 };
 
 export default function Login() {
+  const { t } = useTranslation();
+  const { refreshPremiumStatus, forceRefreshUser } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation<NavigationProp>();
@@ -38,56 +42,69 @@ export default function Login() {
   const handleSubmit = async () => {
     if (!isFormValid()) return;
     setLoading(true);
+    console.log('[LOGIN] Iniciando processo de login...');
+    
     try {
+      const supabase = getSupabaseClient();
+      console.log('[LOGIN] Cliente Supabase obtido');
+      
       const { user, session, error } = await supabase.auth.signIn({
         email: formData.email,
         password: formData.password,
       });
+      console.log('[LOGIN] Resposta do signIn:', { user: user?.id, session: !!session, error: error?.message });
 
       if (error) {
+        console.log('[LOGIN] Erro no signIn:', error.message);
         if (error.message.includes('Invalid login credentials')) {
-          Alert.alert('Conta não encontrada', 'Este email não está cadastrado. Crie uma conta antes de tentar fazer login.');
+          Alert.alert(t('auth.accountNotFound'), t('auth.emailNotRegistered'));
         } else if (error.message.includes('Email not confirmed')) {
-          Alert.alert('Email não verificado', 'Por favor, verifique seu email antes de fazer login.');
+          Alert.alert(t('auth.emailNotVerified'), t('auth.verifyEmailFirst'));
         } else {
-        Alert.alert('Erro', error.message || 'Erro ao fazer login.');
+        Alert.alert(t('auth.error'), error.message || t('auth.loginError'));
         }
         return;
       }
 
       if (user) {
+        console.log('[LOGIN] Usuário autenticado:', user.id);
         // Verifica se o email foi confirmado
         if (!user.email_confirmed_at) {
+          console.log('[LOGIN] Email não confirmado');
           Alert.alert(
-            'Email não verificado',
-            'Por favor, verifique seu email antes de fazer login. Verifique sua caixa de entrada e spam.',
+            t('auth.emailNotVerified'),
+            t('auth.checkInboxSpam'),
             [{ text: 'OK' }]
           );
           return;
         }
 
+        console.log('[LOGIN] Verificando perfil do usuário...');
         // Verifica se existe registro na tabela users
         const { data: userData, error: userError } = await supabase
           .from('users')
           .select('*')
           .eq('id', user.id)
           .single();
+        console.log('[LOGIN] userData:', userData, 'userError:', userError);
 
         if (userError && userError.code !== 'PGRST116') {
           // PGRST116 = 0 rows, ou seja, perfil não existe ainda
+          console.log('[LOGIN] Erro ao buscar perfil:', userError);
           Alert.alert(
-            'Erro',
-            'Não foi possível encontrar seu perfil. Por favor, entre em contato com o suporte.',
+            t('auth.error'),
+            t('auth.profileNotFound'),
             [{ text: 'OK' }]
           );
           return;
         }
 
         // Verifica se a conta foi deletada
-        if (userData && userData.first_name === 'Conta Deletada') {
+        if (userData && userData.first_name === t('auth.accountDeleted')) {
+          console.log('[LOGIN] Conta deletada detectada');
           Alert.alert(
-            'Conta Deletada',
-            'Esta conta foi deletada e não pode mais ser acessada.',
+            t('auth.accountDeleted'),
+            t('auth.accountDeletedMessage'),
             [{ text: 'OK' }]
           );
           // Faz logout para limpar a sessão
@@ -96,9 +113,17 @@ export default function Login() {
         }
 
         if (!userData) {
+          console.log('[LOGIN] Criando perfil do usuário...');
           // Cria o perfil se não existir
           const firstName = user.user_metadata?.first_name || '';
           const lastName = user.user_metadata?.last_name || '';
+          // Usar URL baseada na região atual
+          const { useLanguage } = require('../../contexts/LanguageContext');
+          const { region } = useLanguage();
+          const supabaseUrl = region === 'usa' 
+            ? 'https://ouxrcqjejncpmlaehonk.supabase.co'
+            : 'https://cueqhaexkoojemvewdki.supabase.co';
+          const defaultProfileUrl = `${supabaseUrl}/storage/v1/object/public/user-images/defaultUser.png`;
           const { error: insertError } = await supabase
             .from('users')
             .insert({
@@ -106,17 +131,48 @@ export default function Login() {
               first_name: firstName,
               last_name: lastName,
               is_premium: false,
-              profile_url: 'https://cueqhaexkoojemvewdki.supabase.co/storage/v1/object/public/user-images//defaultUser.png',
+              profile_url: defaultProfileUrl,
             });
           if (insertError) {
-            Alert.alert('Erro', 'Erro ao criar perfil do usuário. Por favor, tente novamente.');
+            console.log('[LOGIN] Erro ao criar perfil:', insertError);
+            Alert.alert(t('auth.error'), t('auth.profileCreationError'));
             return;
           }
+          console.log('[LOGIN] Perfil criado com sucesso');
         }
+        
+        console.log('[LOGIN] Login finalizado com sucesso - aguardando contexto...');
+        
+        // Verificar se a sessão foi criada corretamente
+        const currentSession = supabase.auth.session();
+        console.log('[LOGIN] Sessão atual após login:', currentSession?.user?.id || 'null');
+        
+        // Aguardar um pouco para o contexto processar
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // AUTO REFRESH: Forçar atualização do contexto
+        console.log('[LOGIN] Forçando atualização do contexto...');
+        try {
+          // Forçar refresh do usuário
+          await forceRefreshUser();
+          console.log('[LOGIN] Refresh do usuário concluído');
+          
+          // Forçar refresh do status premium
+          await refreshPremiumStatus();
+          console.log('[LOGIN] Refresh do status premium concluído');
+        } catch (error) {
+          console.log('[LOGIN] Erro no refresh:', error);
+        }
+        
+        // Aguardar mais um pouco para garantir que tudo foi processado
+        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log('[LOGIN] Processo de login completamente finalizado');
       }
     } catch (error: any) {
-      Alert.alert('Erro', 'Ocorreu um erro durante o login. Por favor, tente novamente.');
+      console.error('[LOGIN] Erro geral no login:', error);
+      Alert.alert(t('auth.error'), t('auth.unexpectedError'));
     } finally {
+      console.log('[LOGIN] Finalizando handleSubmit');
       setLoading(false);
     }
   };
@@ -124,10 +180,10 @@ export default function Login() {
   return (
     <View style={Styles.container}>
       <Image source={require('../../../assets/images/logo2.png')} style={Styles.logo} />
-      <Text style={Styles.title}>Bem-vindo de volta!</Text>
+      <Text style={Styles.title}>{t('auth.welcomeBack')}</Text>
       <View style={Styles.form}>
         <TextInput 
-          placeholder="Email" 
+          placeholder={t('auth.email')} 
           style={Styles.input}
           placeholderTextColor="#91D2DE"
           value={formData.email}
@@ -139,7 +195,7 @@ export default function Login() {
 
         <View style={Styles.passwordContainer}>
           <TextInput 
-            placeholder="Senha" 
+            placeholder={t('auth.password')} 
             style={[Styles.input, { paddingRight: 50 }]}
             placeholderTextColor="#91D2DE"
             secureTextEntry={!showPassword}
@@ -171,12 +227,12 @@ export default function Login() {
             <ActivityIndicator color="#0097B2" />
           ) : (
             <Text style={[Styles.buttonText, !isFormValid() && Styles.buttonTextDisabled]}>
-              Entrar
+              {t('auth.enter')}
             </Text>
           )}
         </TouchableOpacity>
         <Text style={Styles.text}>
-          Não tem uma conta? <Text style={Styles.textBold} onPress={() => navigation.navigate('SignUp')}>Crie agora</Text>
+          {t('auth.dontHaveAccount')} <Text style={Styles.textBold} onPress={() => navigation.navigate('SignUp')}>{t('auth.createNow')}</Text>
         </Text>
       </View>
     </View>

@@ -2,19 +2,21 @@ import React from 'react';
 import { View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigationState } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import HomeStack from '../stacks/homeStack';
+import SearchStack from '../stacks/searchStack';
 import AccountStack from '../stacks/accountStack';
 import FloatingPlayer from '../../components/FloatingPlayer';
-import { useNavigationState } from '@react-navigation/native';
-import SearchStack from '../stacks/searchStack';
-import { tabScreenOptions } from '../stacks/animations';
 import { useAuth } from '../../contexts/AuthContext';
+import { tabScreenOptions } from '../stacks/animations';
 
 const Tab = createBottomTabNavigator();
 
 // CRIAR DOIS NAVEGADORES SEPARADOS
 const PremiumTabNavigator = () => {
   const navigationState = useNavigationState(state => state);
+  const { t } = useTranslation();
 
   // Função para verificar se está na Player
   const isInPlayer = () => {
@@ -52,11 +54,11 @@ const PremiumTabNavigator = () => {
         tabBarIcon: ({ focused, color }) => {
           let iconName: string = '';
 
-          if (route.name === 'Inicio') {
+          if (route.name === t('tabs.home')) {
             iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Minha Conta') {
+          } else if (route.name === t('tabs.account')) {
             iconName = focused ? 'person' : 'person-outline';
-          } else if (route.name === 'Busca') {
+          } else if (route.name === t('tabs.search')) {
             iconName = focused ? 'search' : 'search-outline';
           } else {
             iconName = 'help-circle-outline';
@@ -67,17 +69,18 @@ const PremiumTabNavigator = () => {
         tabBarActiveTintColor: '#0097B2',
         tabBarInactiveTintColor: '#91D2DE',
       })}
-      initialRouteName='Inicio'
+      initialRouteName={t('tabs.home')}
     >
-      <Tab.Screen name="Inicio" component={HomeStack} />
-      <Tab.Screen name="Busca" component={SearchStack} />
-      <Tab.Screen name="Minha Conta" component={AccountStack} />
+      <Tab.Screen name={t('tabs.home')} component={HomeStack} />
+      <Tab.Screen name={t('tabs.search')} component={SearchStack} />
+      <Tab.Screen name={t('tabs.account')} component={AccountStack} />
     </Tab.Navigator>
   );
 };
 
 const NonPremiumTabNavigator = () => {
   const navigationState = useNavigationState(state => state);
+  const { t } = useTranslation();
 
   // Função para verificar se está na Player
   const isInPlayer = () => {
@@ -115,11 +118,11 @@ const NonPremiumTabNavigator = () => {
         tabBarIcon: ({ focused, color }) => {
           let iconName: string = '';
 
-          if (route.name === 'Inicio') {
+          if (route.name === t('tabs.home')) {
             iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Minha Conta') {
+          } else if (route.name === t('tabs.account')) {
             iconName = focused ? 'person' : 'person-outline';
-          } else if (route.name === 'Busca') {
+          } else if (route.name === t('tabs.search')) {
             iconName = focused ? 'search' : 'search-outline';
           } else {
             iconName = 'help-circle-outline';
@@ -130,11 +133,11 @@ const NonPremiumTabNavigator = () => {
         tabBarActiveTintColor: '#0097B2',
         tabBarInactiveTintColor: '#91D2DE',
       })}
-      initialRouteName='Inicio'
+      initialRouteName={t('tabs.home')}
          >
-       <Tab.Screen name="Inicio" component={HomeStack} />
-       <Tab.Screen name="Busca" component={SearchStack} />
-       <Tab.Screen name="Minha Conta" component={AccountStack} />
+       <Tab.Screen name={t('tabs.home')} component={HomeStack} />
+       <Tab.Screen name={t('tabs.search')} component={SearchStack} />
+       <Tab.Screen name={t('tabs.account')} component={AccountStack} />
      </Tab.Navigator>
   );
 };
@@ -143,6 +146,7 @@ const NonPremiumTabNavigator = () => {
 export default function TabNavigator() {
   const navigationState = useNavigationState(state => state);
   const { userData } = useAuth();
+  const { t } = useTranslation();
   
   // Função para verificar se está na Player
   const isInPlayer = () => {
@@ -182,11 +186,11 @@ export default function TabNavigator() {
           tabBarIcon: ({ focused, color }) => {
             let iconName: string = '';
 
-            if (route.name === 'Inicio') {
+            if (route.name === t('tabs.home')) {
               iconName = focused ? 'home' : 'home-outline';
-            } else if (route.name === 'Minha Conta') {
+            } else if (route.name === t('tabs.account')) {
               iconName = focused ? 'person' : 'person-outline';
-            } else if (route.name === 'Busca') {
+            } else if (route.name === t('tabs.search')) {
               iconName = focused ? 'search' : 'search-outline';
             } else {
               iconName = 'help-circle-outline';
@@ -197,11 +201,11 @@ export default function TabNavigator() {
           tabBarActiveTintColor: '#0097B2',
           tabBarInactiveTintColor: '#91D2DE',
         })}
-        initialRouteName='Inicio'
+        initialRouteName={t('tabs.home')}
       >
-        <Tab.Screen name="Inicio" component={HomeStack} />
-        <Tab.Screen name="Minha Conta" component={AccountStack} />
-        <Tab.Screen name="Busca" component={SearchStack} />
+        <Tab.Screen name={t('tabs.home')} component={HomeStack} />
+        <Tab.Screen name={t('tabs.account')} component={AccountStack} />
+        <Tab.Screen name={t('tabs.search')} component={SearchStack} />
       </Tab.Navigator>
       <FloatingPlayer />
     </View>

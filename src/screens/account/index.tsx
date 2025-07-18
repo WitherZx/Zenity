@@ -2,13 +2,14 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { View, StyleSheet, Image, Text, TouchableOpacity, Animated, Alert, TextInput, Modal } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useTranslation } from 'react-i18next';
 import CustomButton from '../../components/button1';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../config/supabase';
 import { AccountStackParamList } from '../../stacks/accountStack';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-type NavigationProp = StackNavigationProp<AccountStackParamList, 'AccountScreen'>;
+type NavigationProp = StackNavigationProp<AccountStackParamList>;
 type RouteProps = RouteProp<AccountStackParamList, 'AccountScreen'>;
 
 function AccountSkeleton() {
@@ -56,6 +57,7 @@ function AccountSkeleton() {
 const MyAccount: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
+  const { t } = useTranslation();
   const { user: authUser, signOut, deleteAccount } = useAuth();
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -134,16 +136,16 @@ const MyAccount: React.FC = () => {
 
   const handleDeleteAccount = () => {
     Alert.alert(
-      'Deletar Conta',
-      'Esta ação é irreversível. Todos os seus dados serão permanentemente removidos, incluindo:\n\n• Seu perfil e informações pessoais\n• Suas fotos de perfil\n• Histórico de uso do app\n• Todas as configurações salvas\n\nSe você possui uma assinatura ativa, será necessário cancelá-la antes de deletar a conta.\n\nTem certeza que deseja continuar?',
+      t('account.deleteAccountTitle'),
+      t('account.deleteAccountMessage'),
       [
         {
-          text: 'Cancelar',
+          text: t('account.cancel'),
           style: 'cancel',
           onPress: () => console.log('handleDeleteAccount: Usuário cancelou primeira confirmação'),
         },
         {
-          text: 'Deletar Conta',
+          text: t('account.confirmDelete'),
           style: 'destructive',
           onPress: () => {
             setShowPasswordModal(true);
@@ -155,7 +157,7 @@ const MyAccount: React.FC = () => {
 
   const handleConfirmDelete = async () => {
     if (!password || password.trim() === '') {
-      Alert.alert('Erro', 'Por favor, digite sua senha para confirmar.');
+      Alert.alert(t('common.error'), t('account.passwordRequired'));
       return;
     }
     
@@ -168,21 +170,21 @@ const MyAccount: React.FC = () => {
         setShowPasswordModal(false);
         setPassword('');
         Alert.alert(
-          'Conta Deletada',
-          'Sua conta foi deletada com sucesso.',
+          t('account.accountDeletedTitle'),
+          t('account.accountDeletedMessage'),
           [
             {
-              text: 'OK',
+              text: t('common.ok'),
               onPress: () => {
               }
             }
           ]
         );
       } else {
-        Alert.alert('Erro', result.error || 'Erro ao deletar conta');
+        Alert.alert(t('common.error'), result.error || t('account.deleteError'));
       }
     } catch (error: any) {
-      Alert.alert('Erro', 'Erro inesperado ao deletar conta');
+      Alert.alert(t('common.error'), t('account.unexpectedDeleteError'));
     } finally {
       setDeleting(false);
     }
@@ -226,7 +228,7 @@ const MyAccount: React.FC = () => {
           justifyContent: 'center',
           gap: 8,
         }}>
-          <Text style={{ color: '#fff', fontWeight: 'bold', marginRight: 6 }}>Usuário Premium</Text>
+          <Text style={{ color: '#fff', fontWeight: 'bold', marginRight: 6 }}>{t('account.premiumUser')}</Text>
           <Icon name="diamond" color={'#fff'} size={18}/>
         </View>
       )}
@@ -234,12 +236,12 @@ const MyAccount: React.FC = () => {
       </View>
       <View>
         <CustomButton 
-          text="Editar dados" 
+          text={t('common.edit')} 
           iconName="user" 
           onPress={() => navigation.navigate('EditAccount', { currentUserData: userData })} 
         />
         <CustomButton 
-          text="Sair/Trocar de conta" 
+          text={t('account.logout')} 
           iconName="sign-out" 
           onPress={signOut} 
         />
@@ -247,7 +249,7 @@ const MyAccount: React.FC = () => {
           style={styles.deleteButton}
           onPress={handleDeleteAccount}
         >
-          <Text style={styles.deleteButtonText}>Deletar sua conta</Text>
+          <Text style={styles.deleteButtonText}>{t('account.deleteAccount')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -260,13 +262,13 @@ const MyAccount: React.FC = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Confirmar Exclusão</Text>
+            <Text style={styles.modalTitle}>{t('account.confirmDeletion')}</Text>
             <Text style={styles.modalSubtitle}>
-              Digite sua senha para confirmar a exclusão da conta:
+              {t('account.enterPasswordToConfirm')}
             </Text>
             <TextInput
               style={styles.passwordInput}
-              placeholder="Sua senha"
+              placeholder={t('account.yourPassword')}
               secureTextEntry
               value={password}
               onChangeText={setPassword}
@@ -279,7 +281,7 @@ const MyAccount: React.FC = () => {
                 onPress={handleCancelDelete}
                 disabled={deleting}
               >
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
+                <Text style={styles.cancelButtonText}>{t('common.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.modalButton, styles.deleteModalButton, deleting && styles.disabledButton]}
@@ -287,7 +289,7 @@ const MyAccount: React.FC = () => {
                 disabled={deleting}
               >
                 <Text style={styles.deleteModalButtonText}>
-                  {deleting ? 'Deletando...' : 'Deletar'}
+                  {deleting ? t('account.deleting') : t('account.delete')}
                 </Text>
               </TouchableOpacity>
             </View>

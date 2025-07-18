@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, TextInput, Image, ActivityIndicator, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useTranslation } from 'react-i18next';
 import { LoginStackParamList } from '../../stacks/loginStack';
 import { fonts } from '../../theme/fonts';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../../config/supabase';
+import { getSupabaseClient } from '../../config/supabase';
 
 type NavigationProp = StackNavigationProp<LoginStackParamList>;
 
@@ -18,6 +19,7 @@ type FormData = {
 };
 
 export default function SignUp() {
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -51,34 +53,65 @@ export default function SignUp() {
     if (!isFormValid()) return;
     setLoading(true);
     try {
+      const supabase = getSupabaseClient();
+      
       const { user, session, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
       });
+
       if (error) {
-        Alert.alert('Erro', error.message || 'Erro ao criar conta.');
-      } else {
-        if (user) {
-          await supabase.auth.update({
-            data: {
-              first_name: formData.firstName,
-              last_name: formData.lastName,
-            }
-          });
-          const { error: insertError } = await supabase.from('users').insert({
-              id: user.id,
-              first_name: formData.firstName,
-              last_name: formData.lastName,
-              is_premium: false,
-              profile_url: 'https://cueqhaexkoojemvewdki.supabase.co/storage/v1/object/public/user-images//defaultUser.png',
-          });
-          if (insertError) {
-            Alert.alert('Erro', 'Conta criada, mas houve um erro ao criar o perfil.');
-          }
+        if (error.message.includes('User already registered')) {
+          Alert.alert(t('auth.userExists'), t('auth.userExistsMessage'));
+        } else if (error.message.includes('Password should be at least')) {
+          Alert.alert(t('auth.weakPassword'), t('auth.passwordRequirements'));
+        } else {
+          Alert.alert(t('auth.error'), error.message || t('auth.signUpError'));
         }
+        return;
+      }
+
+      if (user) {
+        // Atualiza os metadados do usuário
+        await supabase.auth.update({
+          data: {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+          }
+        });
+
+        // Usar URL baseada na região atual
+        const { useLanguage } = require('../../contexts/LanguageContext');
+        const { region } = useLanguage();
+        const supabaseUrl = region === 'usa' 
+          ? 'https://ouxrcqjejncpmlaehonk.supabase.co'
+          : 'https://cueqhaexkoojemvewdki.supabase.co';
+        const defaultProfileUrl = `${supabaseUrl}/storage/v1/object/public/user-images/defaultUser.png`;
+        
+        // Cria o perfil do usuário
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert({
+            id: user.id,
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            is_premium: false,
+            profile_url: defaultProfileUrl,
+          });
+
+        if (insertError) {
+          Alert.alert(t('auth.error'), t('auth.profileCreationError'));
+          return;
+        }
+
+        Alert.alert(
+          t('auth.verificationSent'),
+          t('auth.checkEmailSpam'),
+          [{ text: 'OK' }]
+        );
       }
     } catch (error: any) {
-      Alert.alert('Erro', error.message || 'Erro ao criar conta.');
+      Alert.alert(t('auth.error'), t('auth.unexpectedError'));
     } finally {
       setLoading(false);
     }
@@ -87,12 +120,12 @@ export default function SignUp() {
   return (
     <View style={Styles.container}>
       <Image source={require('../../../assets/images/logo2.png')} style={Styles.logo} />
-      <Text style={Styles.title}>Crie sua conta</Text>
+      <Text style={Styles.title}>{t('auth.createYourAccount')}</Text>
       <View style={Styles.form}>
         <View style={Styles.row}>
           <View style={Styles.rowItem}>
             <TextInput 
-              placeholder="Nome" 
+              placeholder={t('auth.firstName')} 
               style={Styles.input}
               placeholderTextColor="#91D2DE"
               value={formData.firstName}
@@ -102,7 +135,7 @@ export default function SignUp() {
           </View>
           <View style={Styles.rowItem}>
             <TextInput 
-              placeholder="Sobrenome" 
+              placeholder={t('auth.lastName')} 
               style={Styles.input}
               placeholderTextColor="#91D2DE"
               value={formData.lastName}
@@ -113,7 +146,7 @@ export default function SignUp() {
         </View>
         
         <TextInput 
-          placeholder="Email" 
+          placeholder={t('auth.email')} 
           style={Styles.input}
           placeholderTextColor="#91D2DE"
           value={formData.email}
@@ -125,7 +158,7 @@ export default function SignUp() {
 
         <View style={Styles.passwordContainer}>
           <TextInput 
-            placeholder="Senha" 
+            placeholder={t('auth.password')} 
             style={[Styles.input, { paddingRight: 50 }]}
             placeholderTextColor="#91D2DE"
             secureTextEntry={!showPassword}
@@ -148,7 +181,7 @@ export default function SignUp() {
 
         <View style={Styles.passwordContainer}>
           <TextInput 
-            placeholder="Confirmar senha" 
+            placeholder={t('auth.confirmPassword')} 
             style={[Styles.input, { paddingRight: 50 }]}
             placeholderTextColor="#91D2DE"
             secureTextEntry={!showConfirmPassword}
@@ -180,12 +213,12 @@ export default function SignUp() {
             <ActivityIndicator color="#0097B2" />
           ) : (
             <Text style={[Styles.buttonText, !isFormValid() && Styles.buttonTextDisabled]}>
-              Criar conta
+              {t('auth.createAccount')}
             </Text>
           )}
         </TouchableOpacity>
         <Text style={Styles.text}>
-          Já tem uma conta? <Text style={Styles.textBold} onPress={() => navigation.navigate('Login')}>Faça login</Text>
+          {t('auth.alreadyHaveAccount')} <Text style={Styles.textBold} onPress={() => navigation.navigate('Login')}>{t('auth.login')}</Text>
         </Text>
       </View>
     </View>

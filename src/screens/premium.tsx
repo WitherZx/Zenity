@@ -2,14 +2,20 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import PageModel2 from "../components/pageModel2";
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useRevenueCat } from '../hooks/useRevenueCat';
 import RevenueCatService from '../services/revenueCatService';
 import { PurchasesPackage } from 'react-native-purchases';
+import { REVENUECAT_CONFIG } from '../config/revenueCatConfig';
+import { testPriceFormatting } from '../utils/priceTest';
 
 export default function Premium() {
   const navigation = useNavigation();
+  const { t } = useTranslation();
+  const { currentLanguage } = useLanguage();
   const { userData, updatePremiumStatus } = useAuth();
   const [purchasing, setPurchasing] = useState(false);
   const [weeklyPackage, setWeeklyPackage] = useState<PurchasesPackage | null>(null);
@@ -22,18 +28,39 @@ export default function Premium() {
 
   // Função para obter preço formatado
   const getFormattedPrice = () => {
+    // Determinar região baseada no idioma
+    const region = currentLanguage === 'en' ? 'usa' : 'brazil';
+    const regionConfig = REVENUECAT_CONFIG.REGIONS[region];
+    
     if (weeklyPackage?.product?.priceString) {
       // Se o preço já vem formatado do RevenueCat, usa ele
       const priceString = weeklyPackage.product.priceString;
       
-      // Adiciona "/semana" se não estiver incluído e for um plano semanal
-      if (weeklyPackage.identifier.includes('weekly') && !priceString.toLowerCase().includes('semana') && !priceString.toLowerCase().includes('week')) {
-        return `${priceString}/semana`;
+      // Para inglês (EUA), sempre mostrar em dólar
+      if (region === 'usa') {
+        // Se o preço não estiver em dólar, usar fallback
+        if (!priceString.includes('$')) {
+          return regionConfig.fallbackPrice;
+        }
+        
+        // Adiciona "/week" se não estiver incluído e for um plano semanal
+        if (weeklyPackage.identifier.includes('weekly') && !priceString.toLowerCase().includes('week')) {
+          return `${priceString}/${regionConfig.period}`;
+        }
+        
+        return priceString;
+      } else {
+        // Para português (Brasil), manter lógica original
+        if (weeklyPackage.identifier.includes('weekly') && !priceString.toLowerCase().includes('semana') && !priceString.toLowerCase().includes('week')) {
+          return `${priceString}/${regionConfig.period}`;
+        }
+        
+        return priceString;
       }
-      
-      return priceString;
     }
-    return 'R$ 19,90/semana'; // Fallback
+    
+    // Fallback baseado na região
+    return regionConfig.fallbackPrice;
   };
 
   // ADICIONAR proteção no início do componente
@@ -48,6 +75,9 @@ export default function Premium() {
 
   useEffect(() => {
     loadWeeklyPlan();
+    
+    // Teste de formatação de preços (remover em produção)
+    testPriceFormatting();
   }, []);
 
   const loadWeeklyPlan = async () => {
@@ -77,11 +107,11 @@ export default function Premium() {
 
   const handlePurchase = async () => {
     if (!weeklyPackage) {
-      Alert.alert('Erro', 'Plano semanal não disponível.');
+      Alert.alert(t('premium.error'), t('premium.weeklyPlanNotAvailable'));
       return;
     }
     if (!userData) {
-      Alert.alert('Erro', 'Usuário não autenticado.');
+      Alert.alert(t('premium.error'), t('premium.userNotAuthenticated'));
       return;
     }
     try {
@@ -90,17 +120,17 @@ export default function Premium() {
       const isPremium = revenueCatService.isPremium(customerInfo);
       if (isPremium) {
         await updatePremiumStatus(true);
-        Alert.alert('Sucesso!', 'Parabéns! Você agora é um usuário premium.');
+        Alert.alert(t('premium.success'), t('premium.congratulationsPremium'));
         // Refresh do hook para atualizar status
         refresh();
       } else {
-        Alert.alert('Erro', 'A compra foi concluída, mas o status premium não foi ativado.');
+        Alert.alert(t('premium.error'), t('premium.purchaseError'));
       }
     } catch (error: any) {
       if (error.userCancelled) {
         return;
       }
-      Alert.alert('Erro na Compra', error.message ? error.message : 'Ocorreu um erro durante a compra. Tente novamente.');
+      Alert.alert(t('premium.purchaseErrorTitle'), error.message ? error.message : t('premium.purchaseErrorMessage'));
     } finally {
       setPurchasing(false);
     }
@@ -112,14 +142,14 @@ export default function Premium() {
       const isPremium = revenueCatService.isPremium(customerInfo);
       if (isPremium) {
         await updatePremiumStatus(true);
-        Alert.alert('Sucesso!', 'Suas compras foram restauradas com sucesso.');
+        Alert.alert(t('premium.success'), t('premium.restoreSuccess'));
         // Refresh do hook para atualizar status
         refresh();
       } else {
-        Alert.alert('Nenhuma Compra Encontrada', 'Não foi encontrada nenhuma compra para restaurar.');
+        Alert.alert(t('premium.noPurchasesFound'), t('premium.noPurchasesMessage'));
       }
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível restaurar as compras.');
+      Alert.alert(t('premium.error'), t('premium.restoreError'));
     }
   };
 
@@ -142,20 +172,20 @@ export default function Premium() {
 
   if (loading || isLoading) {
     return (
-      <PageModel2 icon="diamond-outline" title="Plano Premium" subtitle="Assinatura">
+      <PageModel2 icon="diamond-outline" title={t('premium.title')} subtitle={t('premium.subtitle')}>
         <PremiumSkeleton />
       </PageModel2>
     );
   }
 
   return (
-    <PageModel2 icon="diamond-outline" title="Plano Premium" subtitle="Assinatura">
+    <PageModel2 icon="diamond-outline" title={t('premium.title')} subtitle={t('premium.subtitle')}>
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Premium</Text>
+        <Text style={styles.cardTitle}>{t('premium.planTitle')}</Text>
         <Text style={styles.price}>{getFormattedPrice()}</Text>
         <View style={styles.divider} />
-        <Text style={styles.feature}>Sem anúncios</Text>
-        <Text style={styles.feature}>Melhor qualidade de áudio</Text>
+        <Text style={styles.feature}>{t('premium.noAds')}</Text>
+        <Text style={styles.feature}>{t('premium.betterAudio')}</Text>
       </View>
       {!userData?.is_premium ? (
         <TouchableOpacity 
@@ -169,24 +199,24 @@ export default function Premium() {
             <Ionicons name={"diamond-outline"} size={20} color="#00A0B0" />
           )}
           <Text style={styles.buttonText}>
-            {purchasing ? 'Processando...' : 'Assinar o premium'}
+            {purchasing ? t('premium.processing') : t('premium.subscribePremium')}
           </Text>
         </TouchableOpacity>
       ) : (
         <View style={[styles.button, { backgroundColor: '#24ABC2' }]}> 
           <Ionicons name={"diamond"} size={20} color="#fff" />
-          <Text style={[styles.buttonText, { color: '#fff' }]}>Você já é premium</Text>
+          <Text style={[styles.buttonText, { color: '#fff' }]}>{t('premium.alreadyPremium')}</Text>
         </View>
       )}
       {!userData?.is_premium && (
         <TouchableOpacity style={styles.restoreButton} onPress={handleRestorePurchases}>
-          <Text style={styles.restoreButtonText}>Restaurar Compras</Text>
+          <Text style={styles.restoreButtonText}>{t('premium.restorePurchases')}</Text>
         </TouchableOpacity>
       )}
       
       {error && (
         <Text style={styles.errorText}>
-          Erro: {error}
+          {t('premium.error')}: {error}
         </Text>
       )}
     </PageModel2>
