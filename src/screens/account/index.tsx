@@ -241,7 +241,7 @@ const MyAccount: React.FC = () => {
           onPress={() => navigation.navigate('EditAccount', { currentUserData: userData })} 
         />
         <CustomButton 
-          text={t('account.premium')} 
+          text={t('account.subscribePremium')} 
           iconName="diamond" 
           onPress={() => navigation.navigate('Premium' as any)} 
         />

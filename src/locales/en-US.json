@@ -64,6 +64,7 @@
     "settings": "Settings",
     "language": "Language",
     "premium": "Premium",
+    "subscribePremium": "Subscribe to premium now",
     "logout": "Sign out/Switch account",
     "deleteAccount": "Delete Account",
     "premiumUser": "Premium User",

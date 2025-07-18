@@ -78,8 +78,8 @@ export default function TabNavigator() {
       >
         <Tab.Screen name={t('tabs.home')} component={HomeStack} />
         <Tab.Screen name={t('tabs.search')} component={SearchStack} />
-        <Tab.Screen name={t('tabs.premium')} component={PremiumStack} />
         <Tab.Screen name={t('tabs.account')} component={AccountStack} />
+        <Tab.Screen name={t('tabs.premium')} component={PremiumStack} />
       </Tab.Navigator>
       <FloatingPlayer />
     </View>

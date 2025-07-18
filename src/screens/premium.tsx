@@ -32,34 +32,45 @@ export default function Premium() {
     const region = currentLanguage === 'en' ? 'usa' : 'brazil';
     const regionConfig = REVENUECAT_CONFIG.REGIONS[region];
     
+    console.log('Premium: Current language:', currentLanguage, 'Region:', region);
+    
     if (weeklyPackage?.product?.priceString) {
       // Se o preço já vem formatado do RevenueCat, usa ele
       const priceString = weeklyPackage.product.priceString;
+      console.log('Premium: RevenueCat price string:', priceString);
       
       // Para inglês (EUA), sempre mostrar em dólar
       if (region === 'usa') {
         // Se o preço não estiver em dólar, usar fallback
         if (!priceString.includes('$')) {
+          console.log('Premium: Price not in USD, using fallback:', regionConfig.fallbackPrice);
           return regionConfig.fallbackPrice;
         }
         
         // Adiciona "/week" se não estiver incluído e for um plano semanal
         if (weeklyPackage.identifier.includes('weekly') && !priceString.toLowerCase().includes('week')) {
-          return `${priceString}/${regionConfig.period}`;
+          const formattedPrice = `${priceString}/${regionConfig.period}`;
+          console.log('Premium: Adding /week to price:', formattedPrice);
+          return formattedPrice;
         }
         
+        console.log('Premium: Using USD price as is:', priceString);
         return priceString;
       } else {
         // Para português (Brasil), manter lógica original
         if (weeklyPackage.identifier.includes('weekly') && !priceString.toLowerCase().includes('semana') && !priceString.toLowerCase().includes('week')) {
-          return `${priceString}/${regionConfig.period}`;
+          const formattedPrice = `${priceString}/${regionConfig.period}`;
+          console.log('Premium: Adding /semana to price:', formattedPrice);
+          return formattedPrice;
         }
         
+        console.log('Premium: Using BRL price as is:', priceString);
         return priceString;
       }
     }
     
     // Fallback baseado na região
+    console.log('Premium: No price from RevenueCat, using fallback:', regionConfig.fallbackPrice);
     return regionConfig.fallbackPrice;
   };
 
