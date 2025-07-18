@@ -1,6 +1,6 @@
 {
   "name": "zenity",
-  "version": "1.0.14",
+  "version": "1.1.0",
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
