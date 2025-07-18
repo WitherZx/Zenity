@@ -241,6 +241,11 @@ const MyAccount: React.FC = () => {
           onPress={() => navigation.navigate('EditAccount', { currentUserData: userData })} 
         />
         <CustomButton 
+          text={t('account.premium')} 
+          iconName="diamond" 
+          onPress={() => navigation.navigate('Premium' as any)} 
+        />
+        <CustomButton 
           text={t('account.logout')} 
           iconName="sign-out" 
           onPress={signOut} 
