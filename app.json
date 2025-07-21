@@ -4,7 +4,7 @@
     "slug": "zenity",
     "scheme": "zenity",
     "main": "./src/index.js",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "orientation": "portrait",
     "icon": "./assets/images/adaptive-icon.png",
     "userInterfaceStyle": "light",
@@ -32,14 +32,18 @@
             "SKAdNetworkIdentifier": "cstr6suwn9.skadnetwork"
           }
         ],
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "Este app precisa de acesso à localização para funcionar corretamente",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Este app precisa de acesso à localização para funcionar corretamente",
+        "NSMicrophoneUsageDescription": "Este app precisa de acesso ao microfone para reproduzir áudio",
+        "NSCameraUsageDescription": "Este app pode precisar de acesso à câmera para funcionalidades futuras"
       },
-      "buildNumber": "20",
+      "buildNumber": "21",
       "requireFullScreen": true
     },
     "android": {
       "package": "com.zenity.app",
-      "versionCode": 20,
+      "versionCode": 21,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#0CC0DF"
