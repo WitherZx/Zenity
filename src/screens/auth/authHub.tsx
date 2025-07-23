@@ -9,6 +9,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { fonts } from '../../theme/fonts';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getPrivacyPolicyUrl, getTermsOfServiceUrl } from '../../config/urls';
+import * as AuthSession from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
+import { supabase } from '../../config/supabase';
 
 type NavigationProp = StackNavigationProp<LoginStackParamList>;
 
@@ -26,6 +29,96 @@ export default function AuthHub() {
     resetLanguageSelection();
   };
 
+  // Função de login com Google via OAuth Supabase
+  const handleGoogleLogin = async () => {
+    console.log('Botão Google clicado');
+    try {
+      // Primeiro, vamos tentar obter a URL de autorização
+      const { url, error } = await supabase.auth.signIn({
+        provider: 'google',
+      });
+      
+      if (error) {
+        console.error('Erro Google:', error);
+        alert('Erro ao iniciar login com Google: ' + error.message);
+        return;
+      }
+      
+      console.log('Resposta do Supabase:', { url });
+      
+      // Se temos uma URL, abrir no navegador
+      if (url) {
+        console.log('Abrindo URL no navegador:', url);
+        const result = await WebBrowser.openAuthSessionAsync(url, 'zenity://');
+        
+        if (result.type === 'success') {
+          console.log('Login bem-sucedido!');
+          console.log('URL de retorno:', result.url);
+          
+          // Verificar se o callback foi processado
+          if (result.url && result.url.includes('zenity://')) {
+            console.log('Callback detectado!');
+            console.log('URL completa do callback:', result.url);
+          }
+        } else if (result.type === 'cancel') {
+          console.log('Login cancelado pelo usuário');
+        } else {
+          console.log('Login falhou:', result.type);
+        }
+      } else {
+        alert('Não foi possível obter a URL de autorização');
+      }
+    } catch (e) {
+      console.error('Erro inesperado Google:', e);
+      alert('Erro inesperado ao iniciar login com Google: ' + e);
+    }
+  };
+
+  // Função de login com Apple via OAuth Supabase
+  const handleAppleLogin = async () => {
+    console.log('Botão Apple clicado');
+    try {
+      // Primeiro, vamos tentar obter a URL de autorização
+      const { url, error } = await supabase.auth.signIn({
+        provider: 'apple',
+      });
+      
+      if (error) {
+        console.error('Erro Apple:', error);
+        alert('Erro ao iniciar login com Apple: ' + error.message);
+        return;
+      }
+      
+      console.log('Resposta do Supabase:', { url });
+      
+      // Se temos uma URL, abrir no navegador
+      if (url) {
+        console.log('Abrindo URL no navegador:', url);
+        const result = await WebBrowser.openAuthSessionAsync(url, 'zenity://');
+        
+        if (result.type === 'success') {
+          console.log('Login bem-sucedido!');
+          console.log('URL de retorno:', result.url);
+          
+          // Verificar se o callback foi processado
+          if (result.url && result.url.includes('zenity://')) {
+            console.log('Callback detectado!');
+            console.log('URL completa do callback:', result.url);
+          }
+        } else if (result.type === 'cancel') {
+          console.log('Login cancelado pelo usuário');
+        } else {
+          console.log('Login falhou:', result.type);
+        }
+      } else {
+        alert('Não foi possível obter a URL de autorização');
+      }
+    } catch (e) {
+      console.error('Erro inesperado Apple:', e);
+      alert('Erro inesperado ao iniciar login com Apple: ' + e);
+    }
+  };
+
   return (
     <View style={Styles.container}>
       <View style={Styles.main}>
@@ -37,11 +130,23 @@ export default function AuthHub() {
         >
           <Text style={Styles.buttonText}>{t('auth.continueWithEmail')}</Text>
         </TouchableOpacity>
-        {/*<View style={Styles.iconContainer}>
-          <Ionicons name="logo-facebook" style={Styles.icon}/>
-          <Ionicons name="logo-apple" style={Styles.icon}/>
-          <Ionicons name="logo-google" style={Styles.icon}/>
-        </View>*/}
+       <View style={Styles.iconContainer}>
+          <TouchableOpacity 
+            style={Styles.iconButton}
+            onPress={handleGoogleLogin}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="logo-google" style={Styles.icon}/>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={Styles.iconButton}
+            onPress={handleAppleLogin}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="logo-apple" style={Styles.icon}/>
+          </TouchableOpacity>
+          {/*<Ionicons name="logo-facebook" style={Styles.icon}/>*/}
+        </View>
         <Text style={Styles.text}>
           {t('auth.alreadyHaveAccount')}{' '}
           <Text style={Styles.textBold} onPress={() => navigation.navigate('Login')}>
@@ -113,10 +218,12 @@ const Styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 20,
   },
-  icon: {
+  iconButton: {
     backgroundColor: '#fff',
-    padding: 5,
     borderRadius: 50,
+    padding: 5,
+  },
+  icon: {
     fontSize: 32,
     color: '#0097B2',
   },

@@ -93,12 +93,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Busca o perfil completo do Supabase
-      const { data } = await supabase
+      let { data } = await supabase
         .from('users')
         .select('*')
         .eq('id', authUser.id)
         .single();
       console.log('[AUTH] Dados do perfil carregados:', data);
+
+      // Se não existe registro na tabela users, cria um
+      if (!data) {
+        console.log('[AUTH] Usuário não encontrado na tabela users, criando...');
+        const { data: newUser, error } = await supabase
+          .from('users')
+          .insert([
+            {
+              id: authUser.id,
+              email: authUser.email,
+              first_name: authUser.user_metadata?.full_name?.split(' ')[0] || 'Usuário',
+              last_name: authUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+              is_premium: false,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }
+          ])
+          .select()
+          .single();
+        
+        if (error) {
+          console.error('[AUTH] Erro ao criar usuário:', error);
+        } else {
+          data = newUser;
+          console.log('[AUTH] Usuário criado com sucesso:', data);
+        }
+      }
 
       // Verifica se a conta foi deletada
       if (data && data.first_name === 'Conta Deletada') {
@@ -193,9 +220,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Obter sessão inicial
     const getInitialSession = async () => {
       try {
-        const session = supabase.auth.session();
+    const session = supabase.auth.session();
         console.log('[AUTH] Sessão inicial:', session?.user?.id || 'null');
-        fetchUserProfile(session?.user ?? null);
+    fetchUserProfile(session?.user ?? null);
       } catch (error) {
         console.error('[AUTH] Erro ao obter sessão inicial:', error);
         fetchUserProfile(null);
@@ -219,7 +246,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setRevenueCatPremium(null);
         setLoading(false);
       } else {
-        fetchUserProfile(session?.user ?? null);
+      fetchUserProfile(session?.user ?? null);
       }
     });
 
@@ -236,7 +263,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Limpar RevenueCat PRIMEIRO (antes do usuário se tornar anônimo)
       try {
         console.log('[AUTH] Fazendo logout do RevenueCat...');
-        await revenueCatService.logout();
+      await revenueCatService.logout();
         console.log('[AUTH] Logout do RevenueCat realizado');
         
         // Aguardar um pouco antes de reinicializar
@@ -264,10 +291,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('[AUTH] Erro ao limpar estado:', error);
       // Mesmo com erro, limpar o estado
-      setUser(null);
-      setUserData(null);
-      setRevenueCatPremium(null);
-      setLoading(false);
+    setUser(null);
+    setUserData(null);
+    setRevenueCatPremium(null);
+    setLoading(false);
     }
   };
 

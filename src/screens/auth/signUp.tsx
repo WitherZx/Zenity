@@ -65,20 +65,20 @@ export default function SignUp() {
           Alert.alert(t('auth.userExists'), t('auth.userExistsMessage'));
         } else if (error.message.includes('Password should be at least')) {
           Alert.alert(t('auth.weakPassword'), t('auth.passwordRequirements'));
-        } else {
+      } else {
           Alert.alert(t('auth.error'), error.message || t('auth.signUpError'));
         }
         return;
       }
 
-      if (user) {
+        if (user) {
         // Atualiza os metadados do usuário
-        await supabase.auth.update({
-          data: {
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-          }
-        });
+          await supabase.auth.update({
+            data: {
+              first_name: formData.firstName,
+              last_name: formData.lastName,
+            }
+          });
 
         // Usar URL baseada na região atual
         const { useLanguage } = require('../../contexts/LanguageContext');
@@ -92,14 +92,14 @@ export default function SignUp() {
         const { error: insertError } = await supabase
           .from('users')
           .insert({
-            id: user.id,
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-            is_premium: false,
+              id: user.id,
+              first_name: formData.firstName,
+              last_name: formData.lastName,
+              is_premium: false,
             profile_url: defaultProfileUrl,
           });
 
-        if (insertError) {
+          if (insertError) {
           Alert.alert(t('auth.error'), t('auth.profileCreationError'));
           return;
         }

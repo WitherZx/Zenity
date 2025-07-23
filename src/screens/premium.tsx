@@ -72,15 +72,15 @@ export default function Premium() {
         return priceString;
       } else {
         // Para português (Brasil), manter lógica original
-        if (weeklyPackage.identifier.includes('weekly') && !priceString.toLowerCase().includes('semana') && !priceString.toLowerCase().includes('week')) {
+      if (weeklyPackage.identifier.includes('weekly') && !priceString.toLowerCase().includes('semana') && !priceString.toLowerCase().includes('week')) {
           const formattedPrice = `${priceString}/${regionConfig.period}`;
           console.log('Premium: Adding /semana to price:', formattedPrice);
           return formattedPrice;
-        }
-        
-        console.log('Premium: Using BRL price as is:', priceString);
-        return priceString;
       }
+      
+        console.log('Premium: Using BRL price as is:', priceString);
+      return priceString;
+    }
     }
     
     // Fallback baseado na região

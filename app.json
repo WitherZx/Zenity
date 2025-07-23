@@ -4,7 +4,7 @@
     "slug": "zenity",
     "scheme": "zenity",
     "main": "./src/index.js",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "orientation": "portrait",
     "icon": "./assets/images/adaptive-icon.png",
     "userInterfaceStyle": "light",
@@ -38,12 +38,12 @@
         "NSMicrophoneUsageDescription": "Este app precisa de acesso ao microfone para reproduzir áudio",
         "NSCameraUsageDescription": "Este app pode precisar de acesso à câmera para funcionalidades futuras"
       },
-      "buildNumber": "21",
+      "buildNumber": "22",
       "requireFullScreen": true
     },
     "android": {
       "package": "com.zenity.app",
-      "versionCode": 21,
+      "versionCode": 22,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#0CC0DF"
@@ -69,10 +69,14 @@
         "react-native-google-mobile-ads",
         {
           "androidAppId": "ca-app-pub-5233713899126724~8976251551",
-          "iosAppId": "ca-app-pub-5233713899126724~8976251551"
+          "iosAppId": "ca-app-pub-5233713899126724~8976251551",
+          "delayAppMeasurementInit": true,
+          "optimizeAdLoading": true,
+          "optimizeInitialization": true
         }
       ],
-      "react-native-iap"
+      "react-native-iap",
+      "expo-web-browser"
     ],
     "extra": {
       "eas": {
