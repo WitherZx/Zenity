@@ -123,7 +123,8 @@ export default function EditAccount() {
         const fileType = 'image/jpeg';
         
         // Obtém o token de acesso do usuário
-        const accessToken = supabase.auth.session()?.access_token || '';
+        const { data } = await supabase.auth.getSession();
+        const accessToken = data.session?.access_token || '';
         if (!accessToken) {
           Alert.alert(t('editAccount.error'), t('editAccount.tokenError'));
           return;
@@ -167,7 +168,7 @@ export default function EditAccount() {
         }
         
         // Atualiza o perfil
-        const { data, error } = await supabase
+        const { data: updateResult, error } = await supabase
           .from('users')
           .update({ profile_url: publicUrl })
           .eq('id', authUser.id);

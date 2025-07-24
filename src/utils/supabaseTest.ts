@@ -28,7 +28,8 @@ export const testSupabaseConnection = async () => {
     
     // Teste 3: Verificar autenticação
     console.log('🔐 Teste 3: Verificando autenticação...');
-    const session = supabase.auth.session();
+    const { data } = await supabase.auth.getSession();
+    const session = data.session;
     
     if (session) {
       console.log('✅ Autenticação funcionando');
@@ -109,7 +110,7 @@ export const testAuthListener = async () => {
     const supabase = getSupabaseClient();
     
     // Testar se o listener está funcionando
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('🔔 AuthStateChange disparado:', event, 'user:', session?.user?.id || 'null');
     });
     
@@ -117,7 +118,7 @@ export const testAuthListener = async () => {
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     // Limpar listener
-    listener?.unsubscribe();
+    subscription.unsubscribe();
     
     return { success: true, message: 'Listener configurado' };
   } catch (error: any) {

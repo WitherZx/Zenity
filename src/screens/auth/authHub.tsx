@@ -34,8 +34,11 @@ export default function AuthHub() {
     console.log('Botão Google clicado');
     try {
       // Primeiro, vamos tentar obter a URL de autorização
-      const { url, error } = await supabase.auth.signIn({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
+        options: {
+          redirectTo: 'zenity://',
+        },
       });
       
       if (error) {
@@ -44,12 +47,12 @@ export default function AuthHub() {
         return;
       }
       
-      console.log('Resposta do Supabase:', { url });
+      console.log('Resposta do Supabase:', { data });
       
       // Se temos uma URL, abrir no navegador
-      if (url) {
-        console.log('Abrindo URL no navegador:', url);
-        const result = await WebBrowser.openAuthSessionAsync(url, 'zenity://');
+      if (data?.url) {
+        console.log('Abrindo URL no navegador:', data.url);
+        const result = await WebBrowser.openAuthSessionAsync(data.url, 'zenity://');
         
         if (result.type === 'success') {
           console.log('Login bem-sucedido!');
@@ -79,8 +82,11 @@ export default function AuthHub() {
     console.log('Botão Apple clicado');
     try {
       // Primeiro, vamos tentar obter a URL de autorização
-      const { url, error } = await supabase.auth.signIn({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
+        options: {
+          redirectTo: 'zenity://',
+        },
       });
       
       if (error) {
@@ -89,12 +95,12 @@ export default function AuthHub() {
         return;
       }
       
-      console.log('Resposta do Supabase:', { url });
+      console.log('Resposta do Supabase:', { data });
       
       // Se temos uma URL, abrir no navegador
-      if (url) {
-        console.log('Abrindo URL no navegador:', url);
-        const result = await WebBrowser.openAuthSessionAsync(url, 'zenity://');
+      if (data?.url) {
+        console.log('Abrindo URL no navegador:', data.url);
+        const result = await WebBrowser.openAuthSessionAsync(data.url, 'zenity://');
         
         if (result.type === 'success') {
           console.log('Login bem-sucedido!');

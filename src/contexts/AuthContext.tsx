@@ -220,7 +220,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Obter sessão inicial
     const getInitialSession = async () => {
       try {
-    const session = supabase.auth.session();
+    const { data } = await supabase.auth.getSession();
+    const session = data.session;
         console.log('[AUTH] Sessão inicial:', session?.user?.id || 'null');
     fetchUserProfile(session?.user ?? null);
       } catch (error) {
@@ -232,7 +233,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     getInitialSession();
 
     // Listener para mudanças de autenticação
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('[AUTH] AuthStateChange event:', event, 'user:', session?.user?.id || 'null');
       
       // Forçar atualização imediata do estado
@@ -249,10 +250,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       fetchUserProfile(session?.user ?? null);
       }
     });
+    subscription.unsubscribe();
 
     return () => {
       console.log('[AUTH] Cleanup listener');
-      listener?.unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 
@@ -439,7 +441,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const forceRefreshUser = async () => {
     const supabase = getSupabaseClient();
-    const session = supabase.auth.session();
+    const { data } = await supabase.auth.getSession();
+    const session = data.session;
     if (session?.user) {
       fetchUserProfile(session.user);
     } else {

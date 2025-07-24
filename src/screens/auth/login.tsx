@@ -48,10 +48,12 @@ export default function Login() {
       const supabase = getSupabaseClient();
       console.log('[LOGIN] Cliente Supabase obtido');
       
-      const { user, session, error } = await supabase.auth.signIn({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
+      const user = data.user;
+      const session = data.session;
       console.log('[LOGIN] Resposta do signIn:', { user: user?.id, session: !!session, error: error?.message });
 
       if (error) {
@@ -144,7 +146,8 @@ export default function Login() {
         console.log('[LOGIN] Login finalizado com sucesso - aguardando contexto...');
         
         // Verificar se a sessão foi criada corretamente
-        const currentSession = supabase.auth.session();
+        const { data } = await supabase.auth.getSession();
+        const currentSession = data.session;
         console.log('[LOGIN] Sessão atual após login:', currentSession?.user?.id || 'null');
         
         // Aguardar um pouco para o contexto processar
