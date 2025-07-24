@@ -136,14 +136,14 @@ export default function AuthHub() {
             onPress={handleGoogleLogin}
             activeOpacity={0.7}
           >
-            <Ionicons name="logo-google" style={Styles.icon}/>
+          <Ionicons name="logo-google" style={Styles.icon}/>
           </TouchableOpacity>
           <TouchableOpacity 
             style={Styles.iconButton}
             onPress={handleAppleLogin}
             activeOpacity={0.7}
           >
-            <Ionicons name="logo-apple" style={Styles.icon}/>
+          <Ionicons name="logo-apple" style={Styles.icon}/>
           </TouchableOpacity>
           {/*<Ionicons name="logo-facebook" style={Styles.icon}/>*/}
         </View>
