@@ -37,7 +37,12 @@ export const getSupabaseConfig = async () => {
 
 // Cliente Supabase inicial (será reconfigurado baseado na região)
 let supabase = createClient(BRASIL_SUPABASE_URL, BRASIL_SUPABASE_ANON_KEY, {
-  localStorage: AsyncStorage,
+  auth: {
+    storage: AsyncStorage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false,
+  },
 });
 
 // Função para reconfigurar Supabase baseado na região
@@ -47,7 +52,12 @@ export const reconfigureSupabase = async () => {
     
     // Criar novo cliente com configuração limpa
     supabase = createClient(config.url, config.anonKey, {
-      localStorage: AsyncStorage,
+      auth: {
+        storage: AsyncStorage,
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: false,
+      },
     });
     
     return supabase;

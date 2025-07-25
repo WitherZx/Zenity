@@ -108,7 +108,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .insert([
             {
               id: authUser.id,
-              email: authUser.email,
               first_name: authUser.user_metadata?.full_name?.split(' ')[0] || 'Usuário',
               last_name: authUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
               is_premium: false,
@@ -247,10 +246,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setRevenueCatPremium(null);
         setLoading(false);
       } else {
-      fetchUserProfile(session?.user ?? null);
+        fetchUserProfile(session?.user ?? null);
       }
     });
-    subscription.unsubscribe();
 
     return () => {
       console.log('[AUTH] Cleanup listener');

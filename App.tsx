@@ -12,12 +12,16 @@ import mobileAds, { MaxAdContentRating } from 'react-native-google-mobile-ads';
 import RevenueCatService from './src/services/revenueCatService';
 import i18n from './src/config/i18n'; // Importar i18n configurado
 import { testSupabaseConnection, testAuthListener } from './src/utils/supabaseTest';
+import { getSupabaseClient } from './src/config/supabase';
+import { useAuth } from './src/contexts/AuthContext';
+import MainAppWithDeepLinkHandler from './src/MainAppWithDeepLinkHandler';
 
 // Mantenha a splash screen visível enquanto carregamos recursos
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
+  // Remover o uso de useAuth() daqui
 
   useEffect(() => {
     async function prepare() {
@@ -62,29 +66,6 @@ export default function App() {
           console.error('[APP] Erro no teste do listener de autenticação:', authListenerError);
         }
 
-        // Configurar listener de deep linking para OAuth
-        try {
-          console.log('[APP] Configurando listener de deep linking...');
-          const subscription = Linking.addEventListener('url', (event) => {
-            console.log('[APP] Deep link recebido:', event.url);
-            
-            // Verificar se é um callback do OAuth
-            if (event.url.includes('zenity://')) {
-              console.log('[APP] Callback OAuth detectado:', event.url);
-              
-              // O Supabase deve processar automaticamente o callback
-              // mas podemos adicionar logs para debug
-              if (event.url.includes('access_token=') || event.url.includes('error=')) {
-                console.log('[APP] Callback OAuth válido detectado');
-              }
-            }
-          });
-          
-          console.log('[APP] Listener de deep linking configurado');
-        } catch (linkingError) {
-          console.error('[APP] Erro ao configurar deep linking:', linkingError);
-        }
-
         // Carrega as fontes
         await Font.loadAsync({
           'Montserrat-Thin': require('./assets/fonts/Montserrat-Thin.ttf'),
@@ -126,7 +107,7 @@ export default function App() {
         <LanguageProvider>
           <AuthProvider>
             <PlayerProvider>
-              <Navigation />
+              <MainAppWithDeepLinkHandler />
             </PlayerProvider>
           </AuthProvider>
         </LanguageProvider>

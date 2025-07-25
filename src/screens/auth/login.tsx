@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, TextInput, Image, ActivityIndicator, Alert } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -8,6 +8,8 @@ import { fonts } from '../../theme/fonts';
 import { Ionicons } from '@expo/vector-icons';
 import { getSupabaseClient } from '../../config/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
 
 type NavigationProp = StackNavigationProp<LoginStackParamList>;
 
@@ -15,6 +17,8 @@ type FormData = {
   email: string;
   password: string;
 };
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function Login() {
   const { t } = useTranslation();
@@ -27,6 +31,34 @@ export default function Login() {
     email: '',
     password: '',
   });
+
+  // Configuração do login Google nativo
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    clientId: 'SEU_CLIENT_ID_ANDROID.apps.googleusercontent.com', // Substitua pelo seu Client ID Android
+    // scopes: ['profile', 'email'], // Adicione se quiser escopos extras
+  });
+
+  useEffect(() => {
+    if (response?.type === 'success' && response.authentication) {
+      const idToken = (response.authentication as { idToken?: string, id_token?: string }).idToken || (response.authentication as any).id_token;
+      if (idToken) {
+        signInWithSupabase(idToken);
+      }
+    }
+  }, [response]);
+
+  async function signInWithSupabase(idToken: string) {
+    const { data, error } = await getSupabaseClient().auth.signInWithIdToken({
+      provider: 'google',
+      token: idToken,
+    });
+    if (error) {
+      Alert.alert('Erro ao autenticar com Supabase', error.message);
+    } else {
+      // Usuário autenticado!
+      // Você pode navegar para a home ou atualizar o contexto
+    }
+  }
 
   const isFormValid = () => {
     return formData.email.trim() !== '' && formData.password.trim() !== '';
@@ -233,6 +265,13 @@ export default function Login() {
               {t('auth.enter')}
             </Text>
           )}
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={Styles.button}
+          onPress={() => promptAsync()}
+          disabled={!request}
+        >
+          <Text style={Styles.buttonText}>Entrar com Google (Nativo)</Text>
         </TouchableOpacity>
         <Text style={Styles.text}>
           {t('auth.dontHaveAccount')} <Text style={Styles.textBold} onPress={() => navigation.navigate('SignUp')}>{t('auth.createNow')}</Text>
